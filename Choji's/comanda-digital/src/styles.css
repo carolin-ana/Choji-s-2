@@ -1,0 +1,97 @@
+body { margin: 0; font-family: system-ui, sans-serif; color: #222; }
+.pagina { max-width: 560px; margin: 2rem auto; padding: 0 1rem; }
+.form { display: grid; gap: .75rem; }
+.form label { display: grid; gap: .25rem; }
+.form input { padding: .55rem; border: 1px solid #bbb; border-radius: 6px; }
+.erro { color: #b00020; margin: 0; }
+.dica { color: #666; font-size: .9rem; }
+.btn { background: #c41e3a; color: #fff; border: 0; padding: .6rem 1rem; border-radius: 6px; cursor: pointer; text-decoration: none; display: inline-block; text-align: center; font: inherit; }
+.btn:disabled { opacity: .6; cursor: wait; }
+.btn-sec { background: #fff; color: #222; border: 1px solid #bbb; padding: .55rem .9rem; border-radius: 6px; cursor: pointer; font: inherit; }
+.btn-sec:hover:not(:disabled) { background: #f3f3f3; }
+.btn-sec:disabled { opacity: .5; cursor: not-allowed; }
+.btn-sec.perigo { color: #b00020; border-color: #e3b0b8; }
+.btn:focus-visible, .btn-sec:focus-visible { outline: 2px solid #222; outline-offset: 2px; }
+.caixa { border: 1px solid #ddd; border-radius: 8px; padding: .9rem; margin-bottom: .75rem; }
+.linha-total { display: flex; justify-content: space-between; margin: .5rem 0; }
+.timeline { list-style: none; padding: 0; margin: 1.5rem 0; }
+.timeline li { padding: .6rem 0 .6rem 2rem; position: relative; color: #888; }
+.timeline li::before { content: ''; position: absolute; left: 0; top: .75rem; width: 14px; height: 14px; border-radius: 50%; border: 2px solid #bbb; background: #fff; }
+.timeline li.feita { color: #222; }
+.timeline li.feita::before { background: #2e7d32; border-color: #2e7d32; }
+.timeline li.atual { font-weight: 700; }
+.timeline small { display: block; font-weight: 400; font-size: .85rem; color: #666; }
+
+/* ===== Avisos (toasts) — RNF10 ===== */
+.toasts { position: fixed; right: 1rem; bottom: 1rem; left: 1rem; display: grid; gap: .5rem; justify-items: end; z-index: 100; pointer-events: none; }
+.toast { pointer-events: auto; display: flex; align-items: center; gap: .75rem; max-width: 420px; background: #1b5e20; color: #fff; padding: .7rem .9rem; border-radius: 8px; box-shadow: 0 4px 14px rgba(0,0,0,.25); }
+.toast-erro { background: #b00020; }
+.toast button { background: none; border: 0; color: inherit; font-size: 1.25rem; line-height: 1; cursor: pointer; padding: 0 .25rem; }
+
+/* ===== Etiqueta de status do pedido ===== */
+.badge { display: inline-block; padding: .2rem .6rem; border-radius: 999px; font-size: .8rem; font-weight: 600; white-space: nowrap; background: #eee; color: #333; }
+.st-RECEBIDO { background: #fff3cd; color: #6b4e00; }
+.st-CONFIRMADO { background: #dbeafe; color: #1e3a8a; }
+.st-EM_PREPARO { background: #ffe1cc; color: #8a3b00; }
+.st-PRONTO { background: #d7f0da; color: #1b5e20; }
+.st-SAIU_ENTREGA { background: #e6dcfa; color: #45237a; }
+.st-FINALIZADO { background: #e6e6e6; color: #444; }
+.st-CANCELADO { background: #fbdadf; color: #8a0019; }
+
+/* ===== Painel administrativo ===== */
+.painel { min-height: 100vh; background: #f6f6f7; }
+.painel-topo { display: flex; align-items: center; gap: .75rem 1.5rem; flex-wrap: wrap; padding: .75rem 1.5rem; background: #1f1f23; color: #fff; }
+.painel-marca span { font-weight: 400; opacity: .7; margin-left: .35rem; }
+.painel-menu { display: flex; gap: .25rem; flex: 1; flex-wrap: wrap; }
+.painel-menu a { color: #ddd; text-decoration: none; padding: .4rem .8rem; border-radius: 6px; }
+.painel-menu a:hover { background: #33333a; }
+.painel-menu a.ativo { background: #c41e3a; color: #fff; }
+.painel-usuario { display: flex; align-items: center; gap: .9rem; flex-wrap: wrap; font-size: .9rem; }
+.painel-usuario a { color: #fff; }
+.painel-conteudo { max-width: 1200px; margin: 0 auto; padding: 1.25rem 1.5rem 3rem; }
+.painel-titulo { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.painel-titulo h1 { margin: 0 0 .75rem; }
+
+.filtros-admin { display: flex; gap: .75rem; flex-wrap: wrap; align-items: flex-end; background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: .9rem; margin-bottom: 1rem; }
+.filtros-admin label { display: grid; gap: .25rem; font-size: .85rem; color: #555; }
+.filtros-admin select, .filtros-admin input { padding: .5rem; border: 1px solid #bbb; border-radius: 6px; font: inherit; color: #222; background: #fff; min-width: 9.5rem; }
+
+.grade-pedidos { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; align-items: start; }
+.pedido-card { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: .9rem; display: grid; gap: .6rem; }
+.pedido-card.encerrado { background: #fafafa; color: #555; }
+.pedido-card header, .pedido-card footer { display: flex; justify-content: space-between; align-items: center; gap: .5rem; flex-wrap: wrap; }
+.pedido-card .meta { margin: 0; color: #666; font-size: .85rem; }
+.pedido-card footer { border-top: 1px solid #eee; padding-top: .6rem; }
+.itens { list-style: none; margin: 0; padding: 0; display: grid; gap: .3rem; }
+.itens em, .tabela em { display: block; color: #8a3b00; font-size: .85rem; }
+.motivo { margin: 0; color: #8a0019; font-size: .9rem; }
+.acoes { display: flex; gap: .4rem; flex-wrap: wrap; justify-content: flex-end; }
+.acoes .btn, .acoes .btn-sec { padding: .45rem .7rem; font-size: .9rem; }
+.vazio { grid-column: 1 / -1; text-align: center; color: #666; padding: 2.5rem 1rem; background: #fff; border: 1px dashed #ccc; border-radius: 8px; margin: 0; }
+.paginacao { display: flex; justify-content: center; align-items: center; gap: 1rem; flex-wrap: wrap; margin-top: 1.25rem; color: #555; }
+
+/* ===== Janela (modal) do painel ===== */
+.janela-fundo { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: flex; justify-content: center; align-items: center; padding: 1rem; z-index: 50; }
+.janela { background: #fff; border-radius: 10px; padding: 1.25rem; width: min(640px, 100%); max-height: 90vh; overflow: auto; }
+.janela.estreita { width: min(440px, 100%); }
+.janela header { display: flex; justify-content: space-between; align-items: center; gap: .75rem; }
+.janela h2 { margin: 0; font-size: 1.25rem; }
+.janela h3 { margin: 1.1rem 0 .4rem; font-size: .8rem; text-transform: uppercase; letter-spacing: .05em; color: #666; }
+.janela footer { display: flex; justify-content: flex-end; gap: .5rem; margin-top: 1rem; }
+.janela .timeline { margin: 0; }
+.dados { display: grid; grid-template-columns: max-content 1fr; gap: .25rem 1rem; margin: 0; }
+.dados dt { color: #666; }
+.dados dd { margin: 0; overflow-wrap: anywhere; }
+.tabela { width: 100%; border-collapse: collapse; }
+.tabela th, .tabela td { text-align: left; padding: .4rem .5rem; border-bottom: 1px solid #eee; vertical-align: top; }
+.tabela th { font-size: .8rem; color: #666; font-weight: 600; }
+.tabela .num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.tabela tfoot td { font-weight: 700; border-bottom: 0; }
+.campo { display: grid; gap: .3rem; margin: .5rem 0; }
+.campo textarea { padding: .55rem; border: 1px solid #bbb; border-radius: 6px; font: inherit; resize: vertical; }
+
+@media (max-width: 600px) {
+  .painel-topo, .painel-conteudo { padding-left: 1rem; padding-right: 1rem; }
+  .filtros-admin label { flex: 1 1 45%; }
+  .filtros-admin select, .filtros-admin input { min-width: 0; width: 100%; box-sizing: border-box; }
+}

@@ -1,0 +1,73 @@
+<header class="topo">
+  <h1>Comanda Digital</h1>
+  <div class="linha">
+    @if (ehEquipe()) { <a routerLink="/admin">Painel</a> }
+    @else { <a routerLink="/pedidos">Meus pedidos</a> }
+    @if (auth.logado()) {
+      <span>Olá, {{ primeiroNome() }}</span>
+      <button class="link" (click)="sair()">Sair</button>
+    } @else { <a routerLink="/login">Entrar</a> }
+    <button class="btn" (click)="carrinhoAberto.set(true)">Carrinho ({{ cart.quantidade() }})</button>
+  </div>
+</header>
+
+<nav class="filtros">
+  <button [class.ativo]="!filtro()" (click)="filtro.set(null)">Todos</button>
+  @for (c of categorias(); track c) {
+    <button [class.ativo]="filtro() === c" (click)="filtro.set(c)">{{ c }}</button>
+  }
+</nav>
+
+<main class="grade">
+  @for (p of visiveis(); track p.id) {
+    <article class="card" (click)="abrir(p)">
+      <img [src]="p.fotoUrl" [alt]="p.nome" />
+      <div class="info"><h3>{{ p.nome }}</h3><span>{{ p.precoVenda | currency:'BRL' }}</span></div>
+    </article>
+  } @empty { <p>Nenhum prato disponível nesta categoria.</p> }
+</main>
+
+@if (detalhe(); as p) {
+  <div class="fundo" (click)="detalhe.set(null)">
+    <section class="modal" (click)="$event.stopPropagation()">
+      <img [src]="p.fotoUrl" [alt]="p.nome" />
+      <h2>{{ p.nome }}</h2>
+      <p>{{ p.descricao }}</p>
+      <p>Preparo: {{ p.tempoPreparoMin }} min · {{ p.precoVenda | currency:'BRL' }}</p>
+      <label>Observações <input [value]="obs()" (input)="obs.set($any($event.target).value)" placeholder="Ex.: sem cebola" /></label>
+      <div class="linha">
+        <button (click)="qtd.set(qtd() > 1 ? qtd() - 1 : 1)">−</button>
+        <strong>{{ qtd() }}</strong>
+        <button (click)="qtd.set(qtd() + 1)">+</button>
+        <button class="btn" (click)="adicionar()">Adicionar ao carrinho</button>
+      </div>
+    </section>
+  </div>
+}
+
+@if (carrinhoAberto()) {
+  <div class="fundo" (click)="carrinhoAberto.set(false)">
+    <aside class="gaveta" (click)="$event.stopPropagation()">
+      <h2>Seu carrinho</h2>
+      @for (i of cart.itens(); track $index) {
+        <div class="item">
+          <div>
+            <strong>{{ i.prato.nome }}</strong>
+            @if (i.observacoes) { <small>{{ i.observacoes }}</small> }
+            <span>{{ i.prato.precoVenda * i.quantidade | currency:'BRL' }}</span>
+          </div>
+          <div class="linha">
+            <button (click)="cart.alterarQuantidade($index, i.quantidade - 1)">−</button>
+            {{ i.quantidade }}
+            <button (click)="cart.alterarQuantidade($index, i.quantidade + 1)">+</button>
+            <button (click)="cart.remover($index)">Remover</button>
+          </div>
+        </div>
+      } @empty { <p>Seu carrinho está vazio. Escolha um prato no cardápio.</p> }
+      @if (cart.itens().length) {
+        <footer><strong>Total {{ cart.total() | currency:'BRL' }}</strong>
+          <a class="btn" routerLink="/checkout">Finalizar pedido</a></footer>
+      }
+    </aside>
+  </div>
+}

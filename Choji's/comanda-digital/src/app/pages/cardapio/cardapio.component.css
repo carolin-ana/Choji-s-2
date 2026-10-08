@@ -1,0 +1,25 @@
+:host { display: block; font-family: system-ui, sans-serif; color: #222; }
+.topo { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: .5rem 1rem; padding: 1rem 1.5rem; border-bottom: 1px solid #ddd; }
+.topo h1 { margin: 0; }
+.topo .linha { flex-wrap: wrap; gap: .5rem 1rem; }
+.link { background: none; border: 0; padding: 0; color: #c41e3a; text-decoration: underline; cursor: pointer; font: inherit; }
+.filtros { display: flex; gap: .5rem; padding: 1rem 1.5rem; flex-wrap: wrap; }
+.filtros button { padding: .4rem .9rem; border: 1px solid #bbb; border-radius: 999px; background: #fff; cursor: pointer; }
+.filtros .ativo { background: #222; color: #fff; }
+.grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; padding: 0 1.5rem 2rem; }
+.card { border: 1px solid #ddd; border-radius: 8px; overflow: hidden; cursor: pointer; }
+.card img { width: 100%; height: 160px; object-fit: cover; display: block; }
+.info { padding: .75rem; display: flex; justify-content: space-between; gap: .5rem; }
+.info h3 { margin: 0; font-size: 1rem; }
+.fundo { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: flex; justify-content: center; align-items: center; z-index: 10; }
+.modal { background: #fff; border-radius: 8px; padding: 1.25rem; width: min(480px, 92vw); max-height: 90vh; overflow: auto; }
+.modal img { width: 100%; height: 200px; object-fit: cover; border-radius: 6px; }
+.modal label { display: grid; gap: .25rem; margin: .75rem 0; }
+.modal input { padding: .5rem; }
+.gaveta { background: #fff; position: fixed; right: 0; top: 0; bottom: 0; width: min(400px, 100vw); padding: 1.25rem; overflow: auto; }
+.item { padding: .75rem 0; border-bottom: 1px solid #eee; display: grid; gap: .4rem; }
+.item small { display: block; color: #666; }
+.linha { display: flex; gap: .5rem; align-items: center; }
+.gaveta footer { display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; }
+.btn { background: #c41e3a; color: #fff; border: 0; padding: .55rem 1rem; border-radius: 6px; cursor: pointer; }
+button:focus-visible { outline: 2px solid #c41e3a; outline-offset: 2px; }

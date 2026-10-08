@@ -1,0 +1,161 @@
+<div class="painel-titulo">
+  <h1>Pedidos</h1>
+  <span class="dica">Atualiza sozinho a cada 10 segundos</span>
+</div>
+
+<!-- RF-019: filtros -->
+<form class="filtros-admin" [formGroup]="filtros">
+  <label>Status
+    <select formControlName="status">
+      <option value="">Todos</option>
+      @for (s of todosStatus; track s) { <option [value]="s">{{ rotulos[s] }}</option> }
+    </select>
+  </label>
+  <label>Canal
+    <select formControlName="canal">
+      <option value="">Todos</option>
+      @for (c of canais; track c) { <option [value]="c">{{ rotulosCanal[c] }}</option> }
+    </select>
+  </label>
+  <label>De <input type="date" formControlName="dataInicio" /></label>
+  <label>Até <input type="date" formControlName="dataFim" /></label>
+  <button type="button" class="btn-sec" (click)="limpar()" [disabled]="!temFiltro()">Limpar filtros</button>
+</form>
+
+@if (erroLista()) {
+  <p class="erro">Não foi possível carregar os pedidos. Confira se o servidor está no ar; a tela tenta de novo sozinha.</p>
+}
+
+@if (pagina(); as pg) {
+  <div class="grade-pedidos">
+    @for (p of pg.content; track p.id) {
+      <article class="pedido-card" [class.encerrado]="p.status === 'FINALIZADO' || p.status === 'CANCELADO'">
+        <header>
+          <strong>Pedido #{{ p.id }}</strong>
+          <span [class]="'badge st-' + p.status">{{ rotulos[p.status] }}</span>
+        </header>
+        <p class="meta">{{ p.createdAt | date:'dd/MM/yyyy HH:mm' }} · {{ rotulosCanal[p.canal] }} · {{ p.cliente.nome }}</p>
+        <ul class="itens">
+          @for (i of p.itens; track $index) {
+            <li><strong>{{ i.quantidade }}×</strong> {{ i.nome }}
+              @if (i.observacoes) { <em>Obs.: {{ i.observacoes }}</em> }
+            </li>
+          }
+        </ul>
+        @if (p.status === 'CANCELADO' && p.motivoCancelamento) { <p class="motivo">Motivo: {{ p.motivoCancelamento }}</p> }
+        <footer>
+          <strong>{{ p.valorTotal | currency:'BRL' }}</strong>
+          <div class="acoes">
+            <button type="button" class="btn-sec" (click)="abrirDetalhe(p)">Detalhes</button>
+            @if (podeCancelar(p)) {
+              <button type="button" class="btn-sec perigo" (click)="abrirCancelamento(p)" [disabled]="ocupado() === p.id">Cancelar</button>
+            }
+            @if (proxima(p); as a) {
+              <button type="button" class="btn" (click)="avancar(p, a)" [disabled]="ocupado() === p.id">
+                {{ ocupado() === p.id ? 'Aguarde...' : a.rotulo }}
+              </button>
+            }
+          </div>
+        </footer>
+      </article>
+    } @empty {
+      <p class="vazio">
+        @if (temFiltro()) { Nenhum pedido com estes filtros. } @else { Ainda não chegou nenhum pedido. Quando um cliente finalizar a compra, ele aparece aqui. }
+      </p>
+    }
+  </div>
+
+  <!-- RNF08: paginação -->
+  @if (pg.totalElements > 0) {
+    <nav class="paginacao" aria-label="Paginação">
+      <button type="button" class="btn-sec" (click)="irPara(pg.page - 1)" [disabled]="pg.page === 0">← Anterior</button>
+      <span>Página {{ pg.page + 1 }} de {{ pg.totalPages }} · {{ pg.totalElements }} {{ pg.totalElements === 1 ? 'pedido' : 'pedidos' }}</span>
+      <button type="button" class="btn-sec" (click)="irPara(pg.page + 1)" [disabled]="pg.page + 1 >= pg.totalPages">Próxima →</button>
+    </nav>
+  }
+} @else if (carregando()) {
+  <p class="vazio">Carregando pedidos...</p>
+}
+
+<!-- RF-020: detalhe do pedido -->
+@if (detalhe(); as d) {
+  <div class="janela-fundo" (click)="detalhe.set(null)">
+    <section class="janela" role="dialog" aria-modal="true" aria-label="Detalhe do pedido" (click)="$event.stopPropagation()">
+      <header>
+        <h2>Pedido #{{ d.id }}</h2>
+        <span [class]="'badge st-' + d.status">{{ rotulos[d.status] }}</span>
+      </header>
+
+      <h3>Cliente</h3>
+      <dl class="dados">
+        <dt>Nome</dt><dd>{{ d.cliente.nome }}</dd>
+        <dt>Telefone</dt><dd>{{ d.cliente.telefone || 'Não informado' }}</dd>
+        <dt>E-mail</dt><dd>{{ d.cliente.email }}</dd>
+        <dt>Entrega</dt><dd>{{ d.enderecoEntrega }}</dd>
+        <dt>Canal</dt><dd>{{ rotulosCanal[d.canal] }}</dd>
+      </dl>
+
+      <h3>Itens</h3>
+      <table class="tabela">
+        <thead><tr><th>Qtd.</th><th>Prato</th><th class="num">Unitário</th><th class="num">Subtotal</th></tr></thead>
+        <tbody>
+          @for (i of d.itens; track $index) {
+            <tr>
+              <td>{{ i.quantidade }}×</td>
+              <td>{{ i.nome }} @if (i.observacoes) { <em>Obs.: {{ i.observacoes }}</em> }</td>
+              <td class="num">{{ i.precoUnitario | currency:'BRL' }}</td>
+              <td class="num">{{ i.precoUnitario * i.quantidade | currency:'BRL' }}</td>
+            </tr>
+          }
+        </tbody>
+        <tfoot><tr><td colspan="3">Total</td><td class="num">{{ d.valorTotal | currency:'BRL' }}</td></tr></tfoot>
+      </table>
+      @if (d.observacoes) { <p>Observações do pedido: {{ d.observacoes }}</p> }
+
+      <h3>Andamento</h3>
+      @if (d.status === 'CANCELADO') {
+        <!-- pedido cancelado: mostra só o que realmente aconteceu, na ordem -->
+        <ol class="timeline">
+          @for (h of d.historico; track $index) {
+            <li class="feita" [class.atual]="$last">{{ rotulos[h.status] }}
+              <small>{{ h.createdAt | date:'dd/MM/yyyy HH:mm' }}@if (h.usuario) { · por {{ h.usuario }} }</small>
+            </li>
+          }
+        </ol>
+        <p class="motivo">Motivo do cancelamento: {{ d.motivoCancelamento }}</p>
+      } @else {
+        <ol class="timeline">
+          @for (e of ciclo; track e; let n = $index) {
+            <li [class.feita]="n <= indice(d.status)" [class.atual]="n === indice(d.status)">{{ rotulos[e] }}
+              @if (registro(d, e); as h) {
+                <small>{{ h.createdAt | date:'dd/MM/yyyy HH:mm' }}@if (h.usuario) { · por {{ h.usuario }} }</small>
+              }
+            </li>
+          }
+        </ol>
+      }
+
+      <footer><button type="button" class="btn-sec" (click)="detalhe.set(null)">Fechar</button></footer>
+    </section>
+  </div>
+}
+
+<!-- RF-018: cancelamento com motivo obrigatório -->
+@if (cancelando(); as c) {
+  <div class="janela-fundo" (click)="cancelando.set(null)">
+    <section class="janela estreita" role="dialog" aria-modal="true" aria-label="Cancelar pedido" (click)="$event.stopPropagation()">
+      <header><h2>Cancelar o pedido #{{ c.id }}?</h2></header>
+      <p>O cliente vai ver o pedido como cancelado. Isso não pode ser desfeito.</p>
+      <label class="campo">Motivo do cancelamento
+        <textarea rows="3" maxlength="255" [formControl]="motivo" placeholder="Ex.: ingrediente em falta"></textarea>
+      </label>
+      @if (motivo.touched && (motivo.invalid || !motivo.value.trim())) { <p class="erro">Informe o motivo do cancelamento.</p> }
+      <footer>
+        <button type="button" class="btn-sec" (click)="cancelando.set(null)">Voltar</button>
+        <button type="button" class="btn" (click)="confirmarCancelamento()" [disabled]="ocupado() === c.id">
+          {{ ocupado() === c.id ? 'Cancelando...' : 'Cancelar pedido' }}
+        </button>
+      </footer>
+    </section>
+  </div>
+}
