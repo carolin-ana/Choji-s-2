@@ -22,6 +22,6 @@ public class Usuario {
     public String getSenhaHash() { return senhaHash; } public void setSenhaHash(String v) { senhaHash = v; }
     public Perfil getPerfil() { return perfil; }       public void setPerfil(Perfil v) { perfil = v; }
     public String getEndereco() { return endereco; }   public void setEndereco(String v) { endereco = v; }
-    public void setTelefone(String v) { telefone = v; }
+    public String getTelefone() { return telefone; }   public void setTelefone(String v) { telefone = v; }
     public StatusRegistro getStatus() { return status; }
 }
