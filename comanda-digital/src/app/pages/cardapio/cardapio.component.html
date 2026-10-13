@@ -19,12 +19,21 @@
 </nav>
 
 <main class="grade">
+  @if (carregando()) {
+    <p class="estado">Carregando o cardápio...<br /><small>Se o servidor estava parado, isso pode levar até 2 minutos.</small></p>
+  } @else if (erro()) {
+    <div class="estado" role="alert">
+      <p class="erro">Não foi possível carregar o cardápio.</p>
+      <button class="btn" (click)="carregar()">Tentar de novo</button>
+    </div>
+  } @else {
   @for (p of visiveis(); track p.id) {
     <article class="card" (click)="abrir(p)">
       <img [src]="p.fotoUrl" [alt]="p.nome" />
       <div class="info"><h3>{{ p.nome }}</h3><span>{{ p.precoVenda | currency:'BRL' }}</span></div>
     </article>
-  } @empty { <p>Nenhum prato disponível nesta categoria.</p> }
+  } @empty { <p class="estado">Nenhum prato disponível nesta categoria.</p> }
+  }
 </main>
 
 @if (detalhe(); as p) {

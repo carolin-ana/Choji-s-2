@@ -35,4 +35,16 @@ public final class Dtos {
                                       List<HistoricoResponse> historico) {}
     public record StatusRequest(@NotNull StatusPedido status) {}
     public record CancelarRequest(@NotBlank @Size(max = 255) String motivo) {}
+
+    // ---- Usuários internos (bloco 10, RF-041) ----
+    // Nunca devolve senha nem hash (RNF01)
+    public record UsuarioResponse(Long id, String nome, String email, String telefone, Perfil perfil,
+                                  StatusRegistro status, LocalDateTime createdAt) {}
+    public record NovoUsuarioRequest(@NotBlank @Size(max = 120) String nome, @NotBlank @Email @Size(max = 160) String email,
+                                     @NotBlank @Size(min = 6, max = 72) String senha, @NotNull Perfil perfil,
+                                     @Size(max = 30) String telefone) {}
+    // senha vazia/nula na edição = mantém a senha atual
+    public record AtualizarUsuarioRequest(@NotBlank @Size(max = 120) String nome, @NotBlank @Email @Size(max = 160) String email,
+                                          @Size(max = 72) String senha, @NotNull Perfil perfil,
+                                          @Size(max = 30) String telefone) {}
 }

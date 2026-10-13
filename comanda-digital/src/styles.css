@@ -95,3 +95,28 @@ body { margin: 0; font-family: system-ui, sans-serif; color: #222; }
   .filtros-admin label { flex: 1 1 45%; }
   .filtros-admin select, .filtros-admin input { min-width: 0; width: 100%; box-sizing: border-box; }
 }
+
+/* ===== Usuários (painel) ===== */
+.titulo-acoes { display: flex; align-items: center; gap: .75rem; }
+.filtros-admin input[type=search] { min-width: 14rem; }
+.tabela-rolagem { overflow-x: auto; background: #fff; border: 1px solid #ddd; border-radius: 8px; }
+.tabela-rolagem .tabela { min-width: 640px; }
+.tabela-rolagem .tabela th, .tabela-rolagem .tabela td { padding: .65rem .8rem; vertical-align: middle; }
+.tabela tr.inativo td { color: #888; }
+.st-ATIVO { background: #d7f0da; color: #1b5e20; }
+.st-INATIVO { background: #e6e6e6; color: #555; }
+.st-PAUSADO { background: #fff3cd; color: #6b4e00; }
+.protegido { color: #888; font-size: .85rem; }
+.form-janela { display: grid; gap: .75rem; }
+.form-janela label { display: grid; gap: .3rem; font-size: .9rem; color: #444; }
+.form-janela input, .form-janela select { padding: .55rem; border: 1px solid #bbb; border-radius: 6px; font: inherit; color: #222; background: #fff; }
+.form-janela input.invalido, .form-janela select.invalido { border-color: #b00020; }
+.form-janela small { color: #666; }
+.form-janela .erro { font-size: .85rem; }
+.duas-colunas { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
+@media (max-width: 600px) { .duas-colunas { grid-template-columns: 1fr; } .filtros-admin input[type=search] { min-width: 0; } }
+
+/* ===== Cardápio: carregando / erro (RNF10) ===== */
+.estado { grid-column: 1 / -1; text-align: center; color: #555; padding: 2.5rem 1rem; }
+.estado .btn { margin-top: .75rem; }
+.janela header + form, .janela header + p { margin-top: .75rem; }

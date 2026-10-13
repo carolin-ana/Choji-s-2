@@ -7,6 +7,7 @@ import { AcompanharComponent } from './pages/acompanhar/acompanhar.component';
 import { PedidosComponent } from './pages/pedidos/pedidos.component';
 import { AdminLayoutComponent } from './pages/admin/admin-layout.component';
 import { PedidosAdminComponent } from './pages/admin/pedidos-admin.component';
+import { UsuariosAdminComponent } from './pages/admin/usuarios-admin.component';
 
 export const routes: Routes = [
   { path: '', component: CardapioComponent },
@@ -24,6 +25,8 @@ export const routes: Routes = [
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'pedidos' },
       { path: 'pedidos', component: PedidosAdminComponent },
+      // RF-041: só o ADMIN gerencia usuários (o roleGuard da rota filha restringe mais que o da moldura)
+      { path: 'usuarios', component: UsuariosAdminComponent, canActivate: [roleGuard('ADMIN')] },
     ],
   },
   { path: '**', redirectTo: '' },

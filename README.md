@@ -2,7 +2,8 @@
 
 Sistema de pedidos para uma Dark Kitchen (cozinha que só vende por delivery), desenvolvido como Trabalho Final da disciplina de **Desenvolvimento Full-Stack** (UNASP SP, prof. Thiago Silva, 2026/2), seguindo o SRS *Comanda Digital v3.2*.
 
-> Autor(a): **SEU NOME COMPLETO** · Turma **GTADSI43?**
+> Autor(a): **Ana Carolina Souza Vieira** · Turma **GTADSI43A**
+> Autor(a): **Dennys de Oliveira** · Turma **GTADSI43A**
 
 ## Sistema no ar
 
@@ -47,7 +48,7 @@ A equipe (admin, gerente e cozinheiro) entra pela mesma tela de login do site e 
 | 7 | Fornecedores e compras (RF-021 a 026) | 🚧 Em desenvolvimento |
 | 8 | Controle de estoque (RF-027 a 033) | 🚧 Em desenvolvimento |
 | 9 | Dashboard (RF-034 a 037) | 🚧 Em desenvolvimento |
-| 10 | Autenticação e RBAC (RF-038 a 043) | 🚧 Falta o CRUD de usuários internos |
+| 10 | Autenticação e RBAC (RF-038 a 043) | ✅ Pronto |
 
 ### Regras já implementadas
 

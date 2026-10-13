@@ -1,0 +1,140 @@
+<div class="painel-titulo">
+  <h1>Usuários</h1>
+  <div class="titulo-acoes">
+    <span class="dica">Gerentes e cozinheiros da equipe</span>
+    <button type="button" class="btn" (click)="abrirNovo()">+ Novo usuário</button>
+  </div>
+</div>
+
+<form class="filtros-admin" [formGroup]="filtros">
+  <label>Buscar
+    <input type="search" formControlName="busca" placeholder="Nome ou e-mail" />
+  </label>
+  <label>Perfil
+    <select formControlName="perfil">
+      <option value="">Todos</option>
+      @for (p of perfisFiltro; track p) { <option [value]="p">{{ rotulosPerfil[p] }}</option> }
+    </select>
+  </label>
+  <label>Situação
+    <select formControlName="status">
+      <option value="">Todas</option>
+      <option value="ATIVO">Ativo</option>
+      <option value="INATIVO">Inativo</option>
+    </select>
+  </label>
+  <button type="button" class="btn-sec" (click)="limpar()" [disabled]="!temFiltro()">Limpar filtros</button>
+</form>
+
+@if (erroLista()) {
+  <p class="erro">Não foi possível carregar os usuários. Confira se o servidor está no ar e tente de novo.</p>
+}
+
+@if (pagina(); as pg) {
+  @if (pg.content.length) {
+    <div class="tabela-rolagem">
+      <table class="tabela">
+        <thead>
+          <tr><th>Nome</th><th>E-mail</th><th>Telefone</th><th>Perfil</th><th>Situação</th><th class="num">Ações</th></tr>
+        </thead>
+        <tbody>
+          @for (u of pg.content; track u.id) {
+            <tr [class.inativo]="u.status === 'INATIVO'">
+              <td>{{ u.nome }}</td>
+              <td>{{ u.email }}</td>
+              <td>{{ u.telefone || '—' }}</td>
+              <td><span class="badge">{{ rotulosPerfil[u.perfil] }}</span></td>
+              <td><span [class]="'badge st-' + u.status">{{ rotulosStatus[u.status] }}</span></td>
+              <td class="num">
+                @if (gerenciavel(u)) {
+                  <div class="acoes">
+                    <button type="button" class="btn-sec" (click)="abrirEdicao(u)">Editar</button>
+                    @if (u.status === 'ATIVO') {
+                      <button type="button" class="btn-sec perigo" (click)="desativando.set(u)" [disabled]="ocupado() === u.id">Desativar</button>
+                    } @else {
+                      <button type="button" class="btn-sec" (click)="reativar(u)" [disabled]="ocupado() === u.id">
+                        {{ ocupado() === u.id ? 'Aguarde...' : 'Reativar' }}
+                      </button>
+                    }
+                  </div>
+                } @else {
+                  <span class="protegido">Conta protegida</span>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  } @else {
+    <p class="vazio">@if (temFiltro()) { Nenhum usuário com estes filtros. } @else { Nenhum usuário interno cadastrado. }</p>
+  }
+
+  @if (pg.totalElements > 0) {
+    <nav class="paginacao" aria-label="Paginação">
+      <button type="button" class="btn-sec" (click)="irPara(pg.page - 1)" [disabled]="pg.page === 0">← Anterior</button>
+      <span>Página {{ pg.page + 1 }} de {{ pg.totalPages }} · {{ pg.totalElements }} {{ pg.totalElements === 1 ? 'usuário' : 'usuários' }}</span>
+      <button type="button" class="btn-sec" (click)="irPara(pg.page + 1)" [disabled]="pg.page + 1 >= pg.totalPages">Próxima →</button>
+    </nav>
+  }
+} @else if (carregando()) {
+  <p class="vazio">Carregando usuários...</p>
+}
+
+<!-- Criar / editar (Reactive Forms) -->
+@if (formAberto()) {
+  <div class="janela-fundo" (click)="fecharForm()">
+    <section class="janela estreita" role="dialog" aria-modal="true" [attr.aria-label]="editando() ? 'Editar usuário' : 'Novo usuário'" (click)="$event.stopPropagation()">
+      <header><h2>{{ editando() ? 'Editar usuário' : 'Novo usuário' }}</h2></header>
+      <form class="form-janela" [formGroup]="form" (ngSubmit)="salvar()">
+        <label>Nome
+          <input formControlName="nome" autocomplete="off" [class.invalido]="invalido('nome')" />
+        </label>
+        @if (invalido('nome')) { <span class="erro">Informe o nome.</span> }
+
+        <label>E-mail
+          <input type="email" formControlName="email" autocomplete="off" [class.invalido]="invalido('email')" />
+        </label>
+        @if (invalido('email')) { <span class="erro">Informe um e-mail válido.</span> }
+
+        <div class="duas-colunas">
+          <label>Telefone <input formControlName="telefone" autocomplete="off" placeholder="Opcional" /></label>
+          <label>Perfil
+            <select formControlName="perfil">
+              @for (p of perfisEditaveis; track p) { <option [value]="p">{{ rotulosPerfil[p] }}</option> }
+            </select>
+          </label>
+        </div>
+
+        <label>{{ editando() ? 'Nova senha' : 'Senha' }}
+          <input type="password" formControlName="senha" autocomplete="new-password" [class.invalido]="invalido('senha')" />
+          @if (editando()) { <small>Deixe em branco para manter a senha atual.</small> }
+        </label>
+        @if (invalido('senha')) { <span class="erro">A senha precisa ter ao menos 6 caracteres.</span> }
+
+        @if (erroForm()) { <p class="erro">{{ erroForm() }}</p> }
+
+        <footer>
+          <button type="button" class="btn-sec" (click)="fecharForm()">Cancelar</button>
+          <button type="submit" class="btn" [disabled]="salvando()">{{ salvando() ? 'Salvando...' : 'Salvar' }}</button>
+        </footer>
+      </form>
+    </section>
+  </div>
+}
+
+<!-- Confirmação de desativação (RN06: não apaga, só desativa) -->
+@if (desativando(); as u) {
+  <div class="janela-fundo" (click)="desativando.set(null)">
+    <section class="janela estreita" role="dialog" aria-modal="true" aria-label="Desativar usuário" (click)="$event.stopPropagation()">
+      <header><h2>Desativar {{ u.nome }}?</h2></header>
+      <p>Esta pessoa não vai mais conseguir entrar no painel. Os dados continuam guardados e você pode reativar depois.</p>
+      <footer>
+        <button type="button" class="btn-sec" (click)="desativando.set(null)">Voltar</button>
+        <button type="button" class="btn" (click)="confirmarDesativacao()" [disabled]="ocupado() === u.id">
+          {{ ocupado() === u.id ? 'Desativando...' : 'Desativar' }}
+        </button>
+      </footer>
+    </section>
+  </div>
+}

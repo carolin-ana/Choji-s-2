@@ -23,5 +23,7 @@ public class Usuario {
     public Perfil getPerfil() { return perfil; }       public void setPerfil(Perfil v) { perfil = v; }
     public String getEndereco() { return endereco; }   public void setEndereco(String v) { endereco = v; }
     public String getTelefone() { return telefone; }   public void setTelefone(String v) { telefone = v; }
-    public StatusRegistro getStatus() { return status; }
+    public StatusRegistro getStatus() { return status; }  public void setStatus(StatusRegistro v) { status = v; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setUpdatedAt(LocalDateTime v) { updatedAt = v; }
 }

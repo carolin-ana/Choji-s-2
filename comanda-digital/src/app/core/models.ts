@@ -34,3 +34,12 @@ export interface PedidoAdmin extends Pedido {
 // Mesmo formato do PaginaResponse do back: toda listagem paginada vem assim
 export interface Pagina<T> { content: T[]; page: number; size: number; totalElements: number; totalPages: number; }
 export interface FiltroPedidos { status: StatusPedido | ''; canal: CanalPedido | ''; dataInicio: string; dataFim: string; }
+
+// ---- Usuários internos (bloco 10, RF-041) ----
+export type StatusRegistro = 'ATIVO'|'INATIVO'|'PAUSADO';
+export const ROTULOS_STATUS_REGISTRO: Record<StatusRegistro, string> = { ATIVO: 'Ativo', INATIVO: 'Inativo', PAUSADO: 'Pausado' };
+// Mesmo formato do UsuarioResponse do back (a senha nunca vem)
+export interface UsuarioInterno { id: number; nome: string; email: string; telefone: string | null; perfil: Perfil; status: StatusRegistro; createdAt: string; }
+// O que o formulário manda para criar/editar. Na edição, senha vazia = manter a atual.
+export interface UsuarioForm { nome: string; email: string; telefone: string; perfil: Perfil; senha: string; }
+export interface FiltroUsuarios { busca: string; perfil: Perfil | ''; status: StatusRegistro | ''; }
