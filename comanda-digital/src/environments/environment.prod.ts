@@ -1,2 +1,2 @@
-// Trocar apiUrl pela URL do back no Render/Railway e useMock para false quando o Spring Boot estiver no ar
-export const environment = { production: true, useMock: true, apiUrl: 'https://SEU-BACK.onrender.com' };
+// Build de produção (Vercel): usa o back publicado no Render
+export const environment = { production: true, useMock: false, apiUrl: 'https://comanda-api-ktex.onrender.com' };
