@@ -44,9 +44,9 @@ A equipe (admin, gerente e cozinheiro) entra pela mesma tela de login do site e 
 | 3 | CRUD de cardápio (RF-009, 010, 014) | ✅ Pronto |
 | 4 | Ficha técnica, custo e food cost (RF-011 a 013) | ✅ Pronto |
 | 5 | Pedidos e cozinha (RF-015, 016, 019, 020) | ✅ Pronto |
-| 6 | Integração pedido × estoque (RF-017, 018) | 🚧 Em desenvolvimento |
+| 6 | Integração pedido × estoque (RF-017, 018) | ✅ Pronto |
 | 7 | Fornecedores e compras (RF-021 a 026) | 🚧 Em desenvolvimento |
-| 8 | Controle de estoque (RF-027 a 033) | 🚧 Em desenvolvimento |
+| 8 | Controle de estoque (RF-027 a 033) | ✅ Pronto |
 | 9 | Dashboard (RF-034 a 037) | 🚧 Em desenvolvimento |
 | 10 | Autenticação e RBAC (RF-038 a 043) | ✅ Pronto |
 
@@ -59,6 +59,7 @@ A equipe (admin, gerente e cozinheiro) entra pela mesma tela de login do site e 
 - O status do pedido só avança uma etapa por vez: RECEBIDO → CONFIRMADO → EM_PREPARO → PRONTO → SAIU_ENTREGA → FINALIZADO.
 - Cancelamento só por GERENTE ou ADMIN, com motivo obrigatório; cada mudança de status fica registrada com data, hora e responsável.
 - Prato só fica ATIVO com ficha técnica (RN01); food cost acima de 35% gera alerta sem bloquear (RN02); fator de correção mínimo 1,0 (RN08). O custo é calculado só no back: `SUM(quantidade × fator de correção × custo unitário) / rendimento`.
+- Estoque por movimentações (entrada, saída e estorno): o saldo é sempre calculado. Ao confirmar um pedido, os ingredientes são baixados pela ficha técnica na mesma transação (`@Transactional`); sem estoque, a API responde 422 dizendo o que falta (RN03). Cancelar estorna o que foi baixado.
 - Listagens do painel com paginação (`Pageable`) e filtros por status, canal e período.
 - Erros tratados em um `@RestControllerAdvice` (respostas padronizadas, sem stack trace para o cliente).
 - Segredos (senha do banco, chave JWT) apenas em variáveis de ambiente.

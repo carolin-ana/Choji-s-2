@@ -5,6 +5,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, catchError, merge, of, switchMap, tap, timer } from 'rxjs';
 import { AdminPedidoService } from '../../core/admin-pedido.service';
 import { AuthService } from '../../core/auth.service';
+import { EstoqueService } from '../../core/estoque.service';
 import { ToastService } from '../../core/toast.service';
 import { CANAIS, CICLO, CanalPedido, HistoricoStatus, Pagina, PedidoAdmin, ROTULOS, ROTULOS_CANAL, StatusPedido, TODOS_STATUS } from '../../core/models';
 
@@ -31,6 +32,7 @@ export class PedidosAdminComponent {
   private api = inject(AdminPedidoService);
   private auth = inject(AuthService);
   private toast = inject(ToastService);
+  private estoque = inject(EstoqueService);
   private fb = inject(FormBuilder);
 
   rotulos = ROTULOS;
@@ -124,6 +126,7 @@ export class PedidosAdminComponent {
 
   // Troca o pedido na lista pelo que o back devolveu e pede uma atualização (o filtro pode ter mudado o resultado)
   private aplicar(novo: PedidoAdmin) {
+    this.estoque.atualizarAlertas(); // confirmar/cancelar mexe no estoque: atualiza o badge do menu
     this.ocupado.set(null);
     this.pagina.update(pg => pg && { ...pg, content: pg.content.map(x => (x.id === novo.id ? novo : x)) });
     if (this.detalhe()?.id === novo.id) this.detalhe.set(novo);

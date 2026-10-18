@@ -152,3 +152,18 @@ body { margin: 0; font-family: system-ui, sans-serif; color: #222; }
 .barra-acoes { display: flex; justify-content: flex-end; gap: .5rem; flex-wrap: wrap; margin-top: .75rem; }
 @media (max-width: 900px) { .prato-layout { grid-template-columns: 1fr; } }
 a.btn-sec { text-decoration: none; display: inline-block; }
+
+/* ===== Estoque (blocos 6 e 8) ===== */
+.badge-alerta { display: inline-block; min-width: 1.2rem; margin-left: .35rem; padding: 0 .35rem; border-radius: 999px; background: #e0002a; color: #fff; font-size: .75rem; font-weight: 700; line-height: 1.2rem; text-align: center; }
+.st-OK { background: #d7f0da; color: #1b5e20; }
+.st-BAIXO { background: #fbdadf; color: #8a0019; }
+.mov-ENTRADA { background: #d7f0da; color: #1b5e20; }
+.mov-SAIDA { background: #fbdadf; color: #8a0019; }
+.mov-ESTORNO { background: #dbeafe; color: #1e3a8a; }
+.qtd-mais { color: #1b5e20; font-weight: 600; }
+.qtd-menos { color: #8a0019; font-weight: 600; }
+.saldo-baixo { color: #8a0019; font-weight: 700; }
+.check { display: flex !important; align-items: center; gap: .4rem; flex-direction: row; }
+.check input { min-width: 0 !important; width: auto; }
+.resumo-alerta { background: #fbdadf; color: #8a0019; border-radius: 8px; padding: .7rem .9rem; margin-bottom: 1rem; }
+.resumo-alerta button { margin-left: .5rem; }

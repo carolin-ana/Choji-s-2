@@ -12,6 +12,8 @@ import { PratosAdminComponent } from './pages/admin/pratos-admin.component';
 import { PratoFormComponent } from './pages/admin/prato-form.component';
 import { CategoriasAdminComponent } from './pages/admin/categorias-admin.component';
 import { IngredientesAdminComponent } from './pages/admin/ingredientes-admin.component';
+import { EstoqueAdminComponent } from './pages/admin/estoque-admin.component';
+import { MovimentacoesAdminComponent } from './pages/admin/movimentacoes-admin.component';
 
 export const routes: Routes = [
   { path: '', component: CardapioComponent },
@@ -37,6 +39,9 @@ export const routes: Routes = [
       { path: 'pratos/:id', component: PratoFormComponent, canActivate: [roleGuard('ADMIN', 'GERENTE')] },
       { path: 'categorias', component: CategoriasAdminComponent, canActivate: [roleGuard('ADMIN', 'GERENTE')] },
       { path: 'ingredientes', component: IngredientesAdminComponent, canActivate: [roleGuard('ADMIN', 'GERENTE')] },
+      // Blocos 6 e 8: estoque (ADMIN e GERENTE)
+      { path: 'estoque', component: EstoqueAdminComponent, canActivate: [roleGuard('ADMIN', 'GERENTE')] },
+      { path: 'estoque/movimentacoes', component: MovimentacoesAdminComponent, canActivate: [roleGuard('ADMIN', 'GERENTE')] },
     ],
   },
   { path: '**', redirectTo: '' },

@@ -1,0 +1,103 @@
+<div class="painel-titulo">
+  <h1>Estoque</h1>
+  <div class="titulo-acoes">
+    <span class="dica">Saldo = entradas + estornos − saídas</span>
+    <a class="btn-sec" routerLink="/admin/estoque/movimentacoes">Ver movimentações</a>
+  </div>
+</div>
+
+@if (estoque.alertas() > 0 && !filtros.controls.somenteAlertas.value) {
+  <p class="resumo-alerta" role="status">
+    <strong>{{ estoque.alertas() }}</strong> {{ estoque.alertas() === 1 ? 'ingrediente está' : 'ingredientes estão' }} abaixo do estoque mínimo.
+    <button type="button" class="btn-sec" (click)="verAlertas()">Ver quais</button>
+  </p>
+}
+
+<form class="filtros-admin" [formGroup]="filtros">
+  <label>Buscar <input type="search" formControlName="busca" placeholder="Nome ou SKU" /></label>
+  <label class="check"><input type="checkbox" formControlName="somenteAlertas" /> Só abaixo do mínimo</label>
+  <button type="button" class="btn-sec" (click)="limpar()" [disabled]="!temFiltro()">Limpar filtros</button>
+</form>
+
+@if (erroLista()) { <p class="erro">Não foi possível carregar o estoque. Confira se o servidor está no ar.</p> }
+
+@if (pagina(); as pg) {
+  @if (pg.content.length) {
+    <div class="tabela-rolagem">
+      <table class="tabela">
+        <thead><tr><th>Ingrediente</th><th class="num">Saldo</th><th class="num">Mínimo</th><th>Situação</th><th class="num">Ações</th></tr></thead>
+        <tbody>
+          @for (s of pg.content; track s.ingredienteId) {
+            <tr [class.inativo]="s.status === 'INATIVO'">
+              <td class="celula-prato"><strong>{{ s.ingrediente }}</strong><small>{{ s.sku }}</small></td>
+              <td class="num" [class.saldo-baixo]="s.abaixoMinimo">{{ s.saldo | number:'1.0-3' }} {{ rotulosUnidade[s.unidade] }}</td>
+              <td class="num">{{ s.estoqueMinimo | number:'1.0-3' }} {{ rotulosUnidade[s.unidade] }}</td>
+              <td>
+                @if (s.status === 'INATIVO') { <span class="badge st-INATIVO">Inativo</span> }
+                @else if (s.abaixoMinimo) { <span class="badge st-BAIXO">Abaixo do mínimo</span> }
+                @else { <span class="badge st-OK">Ok</span> }
+              </td>
+              <td class="num">
+                <div class="acoes">
+                  <button type="button" class="btn-sec" (click)="abrir(s, 'ENTRADA')">+ Entrada</button>
+                  <button type="button" class="btn-sec perigo" (click)="abrir(s, 'SAIDA')" [disabled]="s.saldo <= 0">− Saída</button>
+                  <a class="btn-sec" routerLink="/admin/estoque/movimentacoes" [queryParams]="{ ingredienteId: s.ingredienteId }">Histórico</a>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  } @else {
+    <p class="vazio">@if (filtros.controls.somenteAlertas.value) { Nenhum ingrediente abaixo do mínimo. } @else { Nenhum ingrediente encontrado. }</p>
+  }
+  @if (pg.totalPages > 1) {
+    <nav class="paginacao" aria-label="Paginação">
+      <button type="button" class="btn-sec" (click)="irPara(pg.page - 1)" [disabled]="pg.page === 0">← Anterior</button>
+      <span>Página {{ pg.page + 1 }} de {{ pg.totalPages }} · {{ pg.totalElements }} ingredientes</span>
+      <button type="button" class="btn-sec" (click)="irPara(pg.page + 1)" [disabled]="pg.page + 1 >= pg.totalPages">Próxima →</button>
+    </nav>
+  }
+} @else if (carregando()) { <p class="vazio">Carregando estoque...</p> }
+
+@if (movendo(); as m) {
+  <div class="janela-fundo" (click)="movendo.set(null)">
+    <section class="janela estreita" role="dialog" aria-modal="true" aria-label="Movimentar estoque" (click)="$event.stopPropagation()">
+      <header><h2>{{ m.tipo === 'ENTRADA' ? 'Entrada' : 'Saída' }} de {{ m.item.ingrediente }}</h2></header>
+      <form class="form-janela" [formGroup]="form" (ngSubmit)="salvar()">
+        <p class="dica">Saldo atual: <strong>{{ m.item.saldo | number:'1.0-3' }} {{ rotulosUnidade[m.item.unidade] }}</strong></p>
+        @if (m.tipo === 'SAIDA') {
+          <label>Motivo (obrigatório)
+            <select formControlName="motivo">
+              @for (mo of motivosSaida; track mo) { <option [value]="mo">{{ rotulosMotivo[mo] }}</option> }
+            </select>
+          </label>
+        } @else {
+          <p class="dica">Motivo: <strong>Ajuste de inventário</strong>. Entradas de compra entram pelo recebimento do pedido de compra.</p>
+        }
+        <label>Quantidade ({{ rotulosUnidade[m.item.unidade] }})
+          <input type="number" min="0.001" step="any" formControlName="quantidade" [class.invalido]="quantidadeInvalida() || passaDoSaldo()" />
+        </label>
+        @if (quantidadeInvalida()) { <span class="erro">Informe uma quantidade maior que zero.</span> }
+        @if (passaDoSaldo()) { <span class="erro">A saída não pode ser maior que o saldo atual.</span> }
+        @if (m.tipo === 'ENTRADA') {
+          <div class="duas-colunas">
+            <label>Lote <input formControlName="lote" placeholder="Opcional" /></label>
+            <label>Validade <input type="date" formControlName="validade" /></label>
+          </div>
+          <label>Custo por {{ rotulosUnidade[m.item.unidade] }} (R$)
+            <input type="number" min="0" step="0.0001" formControlName="custoUnitario" />
+          </label>
+          <small>Fica registrado na movimentação. Para mudar o custo usado nas fichas técnicas, edite o ingrediente.</small>
+        }
+        <label>Observação <input formControlName="observacao" placeholder="Opcional" /></label>
+        @if (erroForm()) { <p class="erro">{{ erroForm() }}</p> }
+        <footer>
+          <button type="button" class="btn-sec" (click)="movendo.set(null)">Cancelar</button>
+          <button type="submit" class="btn" [disabled]="salvando()">{{ salvando() ? 'Registrando...' : 'Registrar' }}</button>
+        </footer>
+      </form>
+    </section>
+  </div>
+}

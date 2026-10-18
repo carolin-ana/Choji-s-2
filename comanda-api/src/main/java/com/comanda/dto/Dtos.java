@@ -84,4 +84,19 @@ public final class Dtos {
                                 BigDecimal foodCost, FaixaFoodCost faixa, String alerta) {}
     public record FichaResponse(Long pratoId, String prato, Integer rendimento, String modoPreparo,
                                 List<FichaItemResponse> itens, CustoResponse custo) {}
+
+    // ---- Estoque (blocos 6 e 8) ----
+    public record EstoqueSaldoResponse(Long ingredienteId, String ingrediente, String sku, UnidadeMedida unidade, BigDecimal saldo,
+                                       BigDecimal estoqueMinimo, BigDecimal custoUnitario, boolean abaixoMinimo, StatusRegistro status) {}
+    // Movimentação manual: entrada de ajuste (RF-028) ou saída com motivo obrigatório (RF-030)
+    public record MovimentacaoRequest(@NotNull Long ingredienteId, @NotNull TipoMovimentacao tipo, @NotNull MotivoMovimentacao motivo,
+                                      @NotNull @DecimalMin(value = "0.001", message = "a quantidade precisa ser maior que zero")
+                                      @Digits(integer = 9, fraction = 3) BigDecimal quantidade,
+                                      @Size(max = 60) String lote, java.time.LocalDate validade,
+                                      @DecimalMin("0") @Digits(integer = 6, fraction = 4) BigDecimal custoUnitario,
+                                      @Size(max = 255) String observacao) {}
+    public record MovimentacaoResponse(Long id, LocalDateTime createdAt, Long ingredienteId, String ingrediente, UnidadeMedida unidade,
+                                       TipoMovimentacao tipo, MotivoMovimentacao motivo, BigDecimal quantidade, String lote,
+                                       java.time.LocalDate validade, BigDecimal custoUnitario, Long pedidoId, Long pedidoCompraId,
+                                       String usuario, String observacao) {}
 }

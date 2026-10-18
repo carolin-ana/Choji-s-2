@@ -71,3 +71,28 @@ export interface FiltroPratos extends FiltroSimples { categoriaId: number | null
 export interface FichaItem { ingredienteId: number; ingrediente: string; unidade: UnidadeMedida; quantidade: number; fatorCorrecao: number; custoUnitario: number; custo: number; }
 export interface Ficha { pratoId: number; prato: string; rendimento: number; modoPreparo: string | null; itens: FichaItem[]; custo: Custo; }
 export interface FichaForm { rendimento: number | null; modoPreparo: string; itens: { ingredienteId: number | null; quantidade: number | null; fatorCorrecao: number | null }[]; }
+
+// ---- Estoque (blocos 6 e 8) ----
+export type TipoMovimentacao = 'ENTRADA'|'SAIDA'|'ESTORNO';
+export const ROTULOS_TIPO_MOV: Record<TipoMovimentacao, string> = { ENTRADA: 'Entrada', SAIDA: 'Saída', ESTORNO: 'Estorno' };
+export type MotivoMovimentacao = 'COMPRA'|'VENDA'|'DESPERDICIO'|'VENCIMENTO'|'QUEBRA'|'USO_INTERNO'|'AJUSTE'|'ESTORNO';
+export const ROTULOS_MOTIVO: Record<MotivoMovimentacao, string> = {
+  COMPRA: 'Compra', VENDA: 'Venda (pedido)', DESPERDICIO: 'Desperdício', VENCIMENTO: 'Vencimento', QUEBRA: 'Quebra',
+  USO_INTERNO: 'Uso interno', AJUSTE: 'Ajuste de inventário', ESTORNO: 'Estorno (pedido cancelado)',
+};
+// RF-030: motivos aceitos numa saída manual
+export const MOTIVOS_SAIDA: MotivoMovimentacao[] = ['DESPERDICIO', 'VENCIMENTO', 'QUEBRA', 'USO_INTERNO', 'AJUSTE'];
+export interface EstoqueSaldo {
+  ingredienteId: number; ingrediente: string; sku: string; unidade: UnidadeMedida; saldo: number; estoqueMinimo: number;
+  custoUnitario: number; abaixoMinimo: boolean; status: StatusRegistro;
+}
+export interface Movimentacao {
+  id: number; createdAt: string; ingredienteId: number; ingrediente: string; unidade: UnidadeMedida; tipo: TipoMovimentacao;
+  motivo: MotivoMovimentacao; quantidade: number; lote: string | null; validade: string | null; custoUnitario: number | null;
+  pedidoId: number | null; pedidoCompraId: number | null; usuario: string | null; observacao: string | null;
+}
+export interface MovimentacaoForm {
+  ingredienteId: number; tipo: TipoMovimentacao; motivo: MotivoMovimentacao; quantidade: number | null;
+  lote: string; validade: string; custoUnitario: number | null; observacao: string;
+}
+export interface FiltroMovimentacoes { ingredienteId: number | null; tipo: TipoMovimentacao | ''; dataInicio: string; dataFim: string; }

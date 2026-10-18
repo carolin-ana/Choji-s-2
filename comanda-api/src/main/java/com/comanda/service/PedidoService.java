@@ -27,9 +27,10 @@ public class PedidoService {
     private final PedidoRepository pedidos;
     private final UsuarioRepository usuarios;
     private final PratoRepository pratos;
+    private final EstoqueService estoque;
 
-    public PedidoService(PedidoRepository pedidos, UsuarioRepository usuarios, PratoRepository pratos) {
-        this.pedidos = pedidos; this.usuarios = usuarios; this.pratos = pratos;
+    public PedidoService(PedidoRepository pedidos, UsuarioRepository usuarios, PratoRepository pratos, EstoqueService estoque) {
+        this.pedidos = pedidos; this.usuarios = usuarios; this.pratos = pratos; this.estoque = estoque;
     }
 
     // ================= Cliente =================
@@ -52,6 +53,7 @@ public class PedidoService {
             total = total.add(prato.getPrecoVenda().multiply(BigDecimal.valueOf(i.quantidade())));
         }
         p.setValorTotal(total);
+        estoque.exigirDisponivel(p.getItens()); // RN03: sem estoque, sem pedido (422 dizendo o que falta)
         return resposta(pedidos.save(p));
     }
 
@@ -110,7 +112,8 @@ public class PedidoService {
         if (quem.getPerfil() == Perfil.COZINHEIRO && novo != StatusPedido.EM_PREPARO && novo != StatusPedido.PRONTO)
             throw new ApiException(HttpStatus.FORBIDDEN, "O cozinheiro só pode iniciar o preparo e marcar o pedido como pronto.");
 
-        // BLOCO 6 (RF-017): quando novo == CONFIRMADO, a baixa de estoque entra AQUI, dentro desta mesma transação.
+        // RF-017: ao confirmar, baixa os ingredientes pela ficha técnica, na MESMA transação da mudança de status
+        if (novo == StatusPedido.CONFIRMADO) estoque.baixarPedido(p, quem);
         registrar(p, novo, quem);
         return respostaAdmin(p); // o @Transactional grava a alteração ao sair do método
     }
@@ -126,7 +129,8 @@ public class PedidoService {
         if (quem.getPerfil() != Perfil.ADMIN && quem.getPerfil() != Perfil.GERENTE)
             throw new ApiException(HttpStatus.FORBIDDEN, "Só o gerente ou o admin pode cancelar um pedido.");
 
-        // BLOCO 6 (RF-018): o estorno do estoque entra AQUI, dentro desta mesma transação.
+        // RF-018: devolve ao estoque o que foi baixado para este pedido (se já tinha sido confirmado)
+        estoque.estornarPedido(p, quem);
         p.setMotivoCancelamento(motivo.trim());
         registrar(p, StatusPedido.CANCELADO, quem);
         return respostaAdmin(p);

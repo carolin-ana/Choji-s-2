@@ -11,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 
 public interface IngredienteRepository extends JpaRepository<Ingrediente, Long> {
     boolean existsBySkuIgnoreCase(String sku);
+    List<Ingrediente> findByStatus(StatusRegistro status);
     boolean existsBySkuIgnoreCaseAndIdNot(String sku, Long id);
 
     @Query("""

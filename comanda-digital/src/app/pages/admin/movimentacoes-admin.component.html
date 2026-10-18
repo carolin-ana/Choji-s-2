@@ -1,0 +1,63 @@
+<div class="painel-titulo">
+  <h1>Movimentações de estoque</h1>
+  <a class="btn-sec" routerLink="/admin/estoque">← Voltar ao estoque</a>
+</div>
+
+<form class="filtros-admin" [formGroup]="filtros">
+  <label>Ingrediente
+    <select formControlName="ingredienteId">
+      <option [ngValue]="null">Todos</option>
+      @for (i of ingredientes(); track i.id) { <option [ngValue]="i.id">{{ i.nome }}</option> }
+    </select>
+  </label>
+  <label>Tipo
+    <select formControlName="tipo">
+      <option value="">Todos</option>
+      @for (t of tipos; track t) { <option [value]="t">{{ rotulosTipo[t] }}</option> }
+    </select>
+  </label>
+  <label>De <input type="date" formControlName="dataInicio" /></label>
+  <label>Até <input type="date" formControlName="dataFim" /></label>
+  <button type="button" class="btn-sec" (click)="limpar()" [disabled]="!temFiltro()">Limpar filtros</button>
+</form>
+
+@if (erroLista()) { <p class="erro">Não foi possível carregar as movimentações. Confira os filtros e se o servidor está no ar.</p> }
+
+@if (pagina(); as pg) {
+  @if (pg.content.length) {
+    <div class="tabela-rolagem">
+      <table class="tabela">
+        <thead><tr><th>Data</th><th>Ingrediente</th><th>Tipo</th><th>Motivo</th><th class="num">Quantidade</th><th>Lote / validade</th><th>Referência</th><th>Usuário</th></tr></thead>
+        <tbody>
+          @for (m of pg.content; track m.id) {
+            <tr>
+              <td>{{ m.createdAt | date:'dd/MM/yyyy HH:mm' }}</td>
+              <td>{{ m.ingrediente }}</td>
+              <td><span [class]="'badge mov-' + m.tipo">{{ rotulosTipo[m.tipo] }}</span></td>
+              <td>{{ rotulosMotivo[m.motivo] }} @if (m.observacao) { <em class="dica" style="display:block">{{ m.observacao }}</em> }</td>
+              <td class="num" [class.qtd-menos]="m.tipo === 'SAIDA'" [class.qtd-mais]="m.tipo !== 'SAIDA'">
+                {{ m.tipo === 'SAIDA' ? '−' : '+' }}{{ m.quantidade | number:'1.0-3' }} {{ rotulosUnidade[m.unidade] }}
+              </td>
+              <td>{{ m.lote || '—' }}@if (m.validade) { <small style="display:block">até {{ m.validade | date:'dd/MM/yyyy' }}</small> }</td>
+              <td>
+                @if (m.pedidoId) { Pedido #{{ m.pedidoId }} }
+                @else if (m.pedidoCompraId) { Compra #{{ m.pedidoCompraId }} }
+                @else { Manual }
+              </td>
+              <td>{{ m.usuario || '—' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  } @else {
+    <p class="vazio">Nenhuma movimentação com estes filtros.</p>
+  }
+  @if (pg.totalElements > 0) {
+    <nav class="paginacao" aria-label="Paginação">
+      <button type="button" class="btn-sec" (click)="irPara(pg.page - 1)" [disabled]="pg.page === 0">← Anterior</button>
+      <span>Página {{ pg.page + 1 }} de {{ pg.totalPages }} · {{ pg.totalElements }} movimentações</span>
+      <button type="button" class="btn-sec" (click)="irPara(pg.page + 1)" [disabled]="pg.page + 1 >= pg.totalPages">Próxima →</button>
+    </nav>
+  }
+} @else if (carregando()) { <p class="vazio">Carregando movimentações...</p> }
