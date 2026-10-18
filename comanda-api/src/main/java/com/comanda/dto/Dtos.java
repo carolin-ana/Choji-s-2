@@ -47,4 +47,41 @@ public final class Dtos {
     public record AtualizarUsuarioRequest(@NotBlank @Size(max = 120) String nome, @NotBlank @Email @Size(max = 160) String email,
                                           @Size(max = 72) String senha, @NotNull Perfil perfil,
                                           @Size(max = 30) String telefone) {}
+
+    // ---- Cardápio do admin (blocos 3 e 4) ----
+    public record CategoriaRequest(@NotBlank @Size(max = 80) String nome, @Size(max = 255) String descricao,
+                                   @NotNull @Min(0) @Max(999) Integer ordem) {}
+    public record CategoriaResponse(Long id, String nome, String descricao, Integer ordem, StatusRegistro status) {}
+
+    public record IngredienteRequest(@NotBlank @Size(max = 120) String nome, @NotBlank @Size(max = 40) String sku,
+                                     @NotNull UnidadeMedida unidadePadrao,
+                                     @NotNull @DecimalMin("0") @Digits(integer = 9, fraction = 3) BigDecimal estoqueMinimo,
+                                     @NotNull @DecimalMin("0") @Digits(integer = 6, fraction = 4) BigDecimal custoUnitario) {}
+    public record IngredienteResponse(Long id, String nome, String sku, UnidadeMedida unidadePadrao, BigDecimal estoqueMinimo,
+                                      BigDecimal custoUnitario, StatusRegistro status) {}
+
+    public record PratoRequest(@NotBlank @Size(max = 120) String nome, @Size(max = 500) String descricao, @Size(max = 255) String fotoUrl,
+                               @NotNull @DecimalMin("0.01") @Digits(integer = 8, fraction = 2) BigDecimal precoVenda,
+                               @NotNull @Min(1) @Max(600) Integer tempoPreparoMin, @NotNull Long categoriaId,
+                               @NotNull StatusRegistro status) {}
+    // custo = null quando o prato ainda não tem ficha técnica
+    public record PratoAdminResponse(Long id, String nome, String descricao, String fotoUrl, BigDecimal precoVenda,
+                                     Integer tempoPreparoMin, Long categoriaId, String categoria, StatusRegistro status,
+                                     boolean temFicha, CustoResponse custo) {}
+
+    // RN08: fator de correção nunca menor que 1,0
+    public record FichaItemRequest(@NotNull Long ingredienteId,
+                                   @NotNull @DecimalMin(value = "0.001", message = "a quantidade precisa ser maior que zero")
+                                   @Digits(integer = 9, fraction = 3) BigDecimal quantidade,
+                                   @NotNull @DecimalMin(value = "1.0", message = "o fator de correção não pode ser menor que 1,0")
+                                   @Digits(integer = 3, fraction = 2) BigDecimal fatorCorrecao) {}
+    public record FichaRequest(@NotNull @Min(1) @Max(1000) Integer rendimento, @Size(max = 5000) String modoPreparo,
+                               @NotEmpty(message = "a ficha precisa de pelo menos 1 ingrediente") @Valid List<FichaItemRequest> itens) {}
+    public record FichaItemResponse(Long ingredienteId, String ingrediente, UnidadeMedida unidade, BigDecimal quantidade,
+                                    BigDecimal fatorCorrecao, BigDecimal custoUnitario, BigDecimal custo) {}
+    // RF-012 e RF-013. alerta preenchido quando o food cost passa de 35% (RN02: avisa, não bloqueia)
+    public record CustoResponse(BigDecimal custoTotal, Integer rendimento, BigDecimal custoPorcao, BigDecimal precoVenda,
+                                BigDecimal foodCost, FaixaFoodCost faixa, String alerta) {}
+    public record FichaResponse(Long pratoId, String prato, Integer rendimento, String modoPreparo,
+                                List<FichaItemResponse> itens, CustoResponse custo) {}
 }

@@ -15,6 +15,11 @@ import { ROTULOS_PERFIL } from '../../core/models';
       <strong class="painel-marca">Comanda Digital <span>Painel</span></strong>
       <nav class="painel-menu" aria-label="Menu do painel">
         <a routerLink="/admin/pedidos" routerLinkActive="ativo">Pedidos</a>
+        @if (gerencia()) {
+          <a routerLink="/admin/pratos" routerLinkActive="ativo">Pratos</a>
+          <a routerLink="/admin/categorias" routerLinkActive="ativo">Categorias</a>
+          <a routerLink="/admin/ingredientes" routerLinkActive="ativo">Ingredientes</a>
+        }
         @if (ehAdmin()) { <a routerLink="/admin/usuarios" routerLinkActive="ativo">Usuários</a> }
       </nav>
       <div class="painel-usuario">
@@ -30,6 +35,7 @@ export class AdminLayoutComponent {
   private auth = inject(AuthService);
   private router = inject(Router);
   nome = computed(() => this.auth.sessao()?.nome ?? '');
+  gerencia = computed(() => this.auth.temPerfil(['ADMIN', 'GERENTE'])); // cardápio e ingredientes: admin e gerente
   ehAdmin = computed(() => this.auth.temPerfil(['ADMIN'])); // menu "Usuários" só para o ADMIN
   perfil = computed(() => { const s = this.auth.sessao(); return s ? ROTULOS_PERFIL[s.perfil] : ''; });
 

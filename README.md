@@ -41,8 +41,8 @@ A equipe (admin, gerente e cozinheiro) entra pela mesma tela de login do site e 
 |---|---|---|
 | 1 | Cardápio público e carrinho (RF-001 a 003) | ✅ Pronto |
 | 2 | Jornada do pedido do cliente (RF-004 a 008) | ✅ Pronto |
-| 3 | CRUD de cardápio (RF-009, 010, 014) | 🚧 Em desenvolvimento |
-| 4 | Ficha técnica, custo e food cost (RF-011 a 013) | 🚧 Em desenvolvimento |
+| 3 | CRUD de cardápio (RF-009, 010, 014) | ✅ Pronto |
+| 4 | Ficha técnica, custo e food cost (RF-011 a 013) | ✅ Pronto |
 | 5 | Pedidos e cozinha (RF-015, 016, 019, 020) | ✅ Pronto |
 | 6 | Integração pedido × estoque (RF-017, 018) | 🚧 Em desenvolvimento |
 | 7 | Fornecedores e compras (RF-021 a 026) | 🚧 Em desenvolvimento |
@@ -58,6 +58,7 @@ A equipe (admin, gerente e cozinheiro) entra pela mesma tela de login do site e 
 - O preço do pedido é sempre lido do banco, nunca do front.
 - O status do pedido só avança uma etapa por vez: RECEBIDO → CONFIRMADO → EM_PREPARO → PRONTO → SAIU_ENTREGA → FINALIZADO.
 - Cancelamento só por GERENTE ou ADMIN, com motivo obrigatório; cada mudança de status fica registrada com data, hora e responsável.
+- Prato só fica ATIVO com ficha técnica (RN01); food cost acima de 35% gera alerta sem bloquear (RN02); fator de correção mínimo 1,0 (RN08). O custo é calculado só no back: `SUM(quantidade × fator de correção × custo unitário) / rendimento`.
 - Listagens do painel com paginação (`Pageable`) e filtros por status, canal e período.
 - Erros tratados em um `@RestControllerAdvice` (respostas padronizadas, sem stack trace para o cliente).
 - Segredos (senha do banco, chave JWT) apenas em variáveis de ambiente.

@@ -43,3 +43,31 @@ export interface UsuarioInterno { id: number; nome: string; email: string; telef
 // O que o formulário manda para criar/editar. Na edição, senha vazia = manter a atual.
 export interface UsuarioForm { nome: string; email: string; telefone: string; perfil: Perfil; senha: string; }
 export interface FiltroUsuarios { busca: string; perfil: Perfil | ''; status: StatusRegistro | ''; }
+
+// ---- Cardápio do admin (blocos 3 e 4) ----
+export type UnidadeMedida = 'G'|'ML'|'UN'|'KG'|'L';
+export const UNIDADES: UnidadeMedida[] = ['G', 'ML', 'UN', 'KG', 'L'];
+export const ROTULOS_UNIDADE: Record<UnidadeMedida, string> = { G: 'g', ML: 'ml', UN: 'un', KG: 'kg', L: 'L' };
+export type FaixaFoodCost = 'VERDE'|'AMARELO'|'VERMELHO';
+export const ROTULOS_FAIXA: Record<FaixaFoodCost, string> = { VERDE: 'Saudável (até 30%)', AMARELO: 'Atenção (30% a 35%)', VERMELHO: 'Alto (acima de 35%)' };
+export interface FiltroSimples { busca: string; status: StatusRegistro | ''; }
+
+export interface Categoria { id: number; nome: string; descricao: string | null; ordem: number; status: StatusRegistro; }
+export interface CategoriaForm { nome: string; descricao: string; ordem: number; }
+
+// custoUnitario = preço de UMA unidade padrão (1 g, 1 ml, 1 un...)
+export interface Ingrediente { id: number; nome: string; sku: string; unidadePadrao: UnidadeMedida; estoqueMinimo: number; custoUnitario: number; status: StatusRegistro; }
+export interface IngredienteForm { nome: string; sku: string; unidadePadrao: UnidadeMedida; estoqueMinimo: number; custoUnitario: number; }
+
+// Mesmo formato do CustoResponse do back: o front só MOSTRA, quem calcula é o Service do Spring (RF-012)
+export interface Custo { custoTotal: number; rendimento: number; custoPorcao: number; precoVenda: number; foodCost: number; faixa: FaixaFoodCost; alerta: string | null; }
+export interface PratoAdmin {
+  id: number; nome: string; descricao: string | null; fotoUrl: string | null; precoVenda: number; tempoPreparoMin: number;
+  categoriaId: number; categoria: string; status: StatusRegistro; temFicha: boolean; custo: Custo | null;
+}
+export interface PratoForm { nome: string; descricao: string; fotoUrl: string; precoVenda: number | null; tempoPreparoMin: number | null; categoriaId: number | null; status: StatusRegistro; }
+export interface FiltroPratos extends FiltroSimples { categoriaId: number | null; }
+
+export interface FichaItem { ingredienteId: number; ingrediente: string; unidade: UnidadeMedida; quantidade: number; fatorCorrecao: number; custoUnitario: number; custo: number; }
+export interface Ficha { pratoId: number; prato: string; rendimento: number; modoPreparo: string | null; itens: FichaItem[]; custo: Custo; }
+export interface FichaForm { rendimento: number | null; modoPreparo: string; itens: { ingredienteId: number | null; quantidade: number | null; fatorCorrecao: number | null }[]; }

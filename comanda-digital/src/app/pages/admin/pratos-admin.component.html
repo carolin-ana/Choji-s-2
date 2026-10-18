@@ -1,0 +1,88 @@
+<div class="painel-titulo">
+  <h1>Pratos</h1>
+  <div class="titulo-acoes">
+    <span class="dica">Custo e food cost vêm da ficha técnica</span>
+    <a class="btn" routerLink="/admin/pratos/novo">+ Novo prato</a>
+  </div>
+</div>
+
+<form class="filtros-admin" [formGroup]="filtros">
+  <label>Buscar <input type="search" formControlName="busca" placeholder="Nome do prato" /></label>
+  <label>Categoria
+    <select formControlName="categoriaId">
+      <option [ngValue]="null">Todas</option>
+      @for (c of categorias(); track c.id) { <option [ngValue]="c.id">{{ c.nome }}</option> }
+    </select>
+  </label>
+  <label>Situação
+    <select formControlName="status">
+      <option value="">Todas</option>
+      <option value="ATIVO">Ativo</option>
+      <option value="PAUSADO">Pausado</option>
+      <option value="INATIVO">Inativo</option>
+    </select>
+  </label>
+  <button type="button" class="btn-sec" (click)="limpar()" [disabled]="!temFiltro()">Limpar filtros</button>
+</form>
+
+@if (erroLista()) { <p class="erro">Não foi possível carregar os pratos. Confira se o servidor está no ar.</p> }
+
+@if (pagina(); as pg) {
+  @if (pg.content.length) {
+    <div class="tabela-rolagem">
+      <table class="tabela">
+        <thead>
+          <tr><th></th><th>Prato</th><th class="num">Preço</th><th class="num">Custo/porção</th><th>Food cost</th><th>Situação</th><th class="num">Ações</th></tr>
+        </thead>
+        <tbody>
+          @for (p of pg.content; track p.id) {
+            <tr [class.inativo]="p.status === 'INATIVO'">
+              <td><img class="miniatura" [src]="p.fotoUrl || ''" [alt]="p.nome" /></td>
+              <td class="celula-prato"><strong>{{ p.nome }}</strong><small>{{ p.categoria }}</small></td>
+              <td class="num">{{ p.precoVenda | currency:'BRL' }}</td>
+              <td class="num">@if (p.custo) { {{ p.custo.custoPorcao | currency:'BRL' }} } @else { — }</td>
+              <td>
+                @if (p.custo; as c) {
+                  <span [class]="'badge fc-' + c.faixa" [title]="rotulosFaixa[c.faixa]">{{ c.foodCost | number:'1.1-1' }}%</span>
+                } @else {
+                  <span class="badge">Sem ficha</span>
+                }
+              </td>
+              <td><span [class]="'badge st-' + p.status">{{ rotulosStatus[p.status] }}</span></td>
+              <td class="num">
+                <div class="acoes">
+                  <a class="btn-sec" [routerLink]="['/admin/pratos', p.id]">{{ p.temFicha ? 'Editar' : 'Montar ficha' }}</a>
+                  @if (p.status !== 'INATIVO') {
+                    <button type="button" class="btn-sec perigo" (click)="desativando.set(p)" [disabled]="ocupado() === p.id">Desativar</button>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  } @else {
+    <p class="vazio">@if (temFiltro()) { Nenhum prato com estes filtros. } @else { Nenhum prato cadastrado. }</p>
+  }
+  @if (pg.totalElements > 0) {
+    <nav class="paginacao" aria-label="Paginação">
+      <button type="button" class="btn-sec" (click)="irPara(pg.page - 1)" [disabled]="pg.page === 0">← Anterior</button>
+      <span>Página {{ pg.page + 1 }} de {{ pg.totalPages }} · {{ pg.totalElements }} {{ pg.totalElements === 1 ? 'prato' : 'pratos' }}</span>
+      <button type="button" class="btn-sec" (click)="irPara(pg.page + 1)" [disabled]="pg.page + 1 >= pg.totalPages">Próxima →</button>
+    </nav>
+  }
+} @else if (carregando()) { <p class="vazio">Carregando pratos...</p> }
+
+@if (desativando(); as p) {
+  <div class="janela-fundo" (click)="desativando.set(null)">
+    <section class="janela estreita" role="dialog" aria-modal="true" aria-label="Desativar prato" (click)="$event.stopPropagation()">
+      <header><h2>Desativar {{ p.nome }}?</h2></header>
+      <p>O prato sai do cardápio do cliente. Os pedidos antigos e a ficha técnica continuam guardados, e você pode reativá-lo pela edição.</p>
+      <footer>
+        <button type="button" class="btn-sec" (click)="desativando.set(null)">Voltar</button>
+        <button type="button" class="btn" (click)="confirmarDesativacao()" [disabled]="ocupado() === p.id">Desativar</button>
+      </footer>
+    </section>
+  </div>
+}

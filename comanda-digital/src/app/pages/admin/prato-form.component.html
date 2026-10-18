@@ -1,0 +1,142 @@
+<div class="painel-titulo">
+  <h1>{{ pratoId() ? (prato()?.nome ?? 'Editar prato') : 'Novo prato' }}</h1>
+  <a class="btn-sec" routerLink="/admin/pratos">← Voltar aos pratos</a>
+</div>
+
+@if (carregando()) {
+  <p class="vazio">Carregando...</p>
+} @else if (erroCarga()) {
+  <p class="erro">{{ erroCarga() }}</p>
+} @else {
+<div class="prato-layout">
+
+  <!-- RF-010: dados do prato -->
+  <section class="cartao">
+    <h2>Dados do prato</h2>
+    <form class="form-janela" [formGroup]="dados" (ngSubmit)="salvarDados()">
+      <label>Nome <input formControlName="nome" autocomplete="off" [class.invalido]="dadoInvalido('nome')" /></label>
+      @if (dadoInvalido('nome')) { <span class="erro">Informe o nome do prato.</span> }
+      <div class="duas-colunas">
+        <label>Categoria
+          <select formControlName="categoriaId" [class.invalido]="dadoInvalido('categoriaId')">
+            <option [ngValue]="null" disabled>Escolha...</option>
+            @for (c of categorias(); track c.id) {
+              <option [ngValue]="c.id">{{ c.nome }}{{ c.status === 'INATIVO' ? ' (inativa)' : '' }}</option>
+            }
+          </select>
+        </label>
+        <label>Situação
+          <select formControlName="status">
+            @for (s of statusOpcoes; track s) {
+              <option [value]="s" [disabled]="s === 'ATIVO' && !temFichaSalva()">{{ rotulosStatus[s] }}</option>
+            }
+          </select>
+        </label>
+      </div>
+      @if (!temFichaSalva()) { <small>Para deixar o prato <strong>Ativo</strong> (visível no cardápio), salve antes a ficha técnica.</small> }
+      <div class="duas-colunas">
+        <label>Preço de venda (R$) <input type="number" min="0.01" step="0.01" formControlName="precoVenda" [class.invalido]="dadoInvalido('precoVenda')" /></label>
+        <label>Tempo de preparo (min) <input type="number" min="1" max="600" formControlName="tempoPreparoMin" [class.invalido]="dadoInvalido('tempoPreparoMin')" /></label>
+      </div>
+      @if (dadoInvalido('precoVenda') || dadoInvalido('tempoPreparoMin') || dadoInvalido('categoriaId')) {
+        <span class="erro">Escolha a categoria e informe preço (maior que zero) e tempo de preparo (1 a 600 minutos).</span>
+      }
+      <label>Foto (endereço da imagem) <input formControlName="fotoUrl" autocomplete="off" placeholder="Ex.: imagens/tonkotsu.png" /></label>
+      @if (dados.controls.fotoUrl.value) { <img class="foto-previa" [src]="dados.controls.fotoUrl.value" alt="Prévia da foto" /> }
+      <label>Descrição <textarea rows="3" formControlName="descricao" maxlength="500"></textarea></label>
+      @if (erroDados()) { <p class="erro">{{ erroDados() }}</p> }
+      <div class="barra-acoes">
+        <button type="submit" class="btn" [disabled]="salvandoDados()">{{ salvandoDados() ? 'Salvando...' : (pratoId() ? 'Salvar dados' : 'Criar prato') }}</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- RF-012 e RF-013: custo e food cost (calculados pelo back) -->
+  <aside class="cartao custo-painel">
+    <h2>Custo e food cost</h2>
+    @if (!pratoId()) {
+      <p class="dica">Crie o prato para montar a ficha técnica. O custo aparece aqui.</p>
+    } @else if (calculo(); as c) {
+      <div [class]="'food-cost fc-' + c.custo.faixa">
+        <span>Food cost<br /><small>{{ rotulosFaixa[c.custo.faixa] }}</small></span>
+        <strong>{{ c.custo.foodCost | number:'1.1-1' }}%</strong>
+      </div>
+      <dl>
+        <dt>Custo da receita</dt><dd>{{ c.custo.custoTotal | currency:'BRL':'symbol':'1.2-2' }}</dd>
+        <dt>Rendimento</dt><dd>{{ c.custo.rendimento }} {{ c.custo.rendimento === 1 ? 'porção' : 'porções' }}</dd>
+        <dt>Custo por porção</dt><dd><strong>{{ c.custo.custoPorcao | currency:'BRL' }}</strong></dd>
+        <dt>Preço de venda (salvo)</dt><dd>{{ c.custo.precoVenda | currency:'BRL' }}</dd>
+        <dt>Margem bruta por porção</dt><dd>{{ c.custo.precoVenda - c.custo.custoPorcao | currency:'BRL' }}</dd>
+      </dl>
+      @if (c.custo.alerta) { <p class="alerta-fc" role="alert">{{ c.custo.alerta }}</p> }
+      <p class="dica">
+        @if (calculando()) { Recalculando... }
+        @else if (erroCalculo()) { <span class="erro">{{ erroCalculo() }}</span> }
+        @else if (ficha.invalid) { Complete as linhas da ficha para recalcular. }
+        @else { Calculado pelo servidor: custo = Σ(quantidade × fator de correção × custo unitário) ÷ rendimento. }
+      </p>
+    } @else {
+      <p class="dica">Preencha a ficha técnica ao lado. O custo é calculado enquanto você digita.</p>
+    }
+  </aside>
+
+  <!-- RF-011 e RF-014: ficha técnica (FormArray) e modo de preparo -->
+  @if (pratoId()) {
+    <section class="cartao largo">
+      <h2>Ficha técnica {{ temFichaSalva() ? '' : '(ainda não salva)' }}</h2>
+      <form [formGroup]="ficha" (ngSubmit)="salvarFicha()" class="form-janela">
+        <label style="max-width: 14rem">Rendimento (porções)
+          <input type="number" min="1" max="1000" formControlName="rendimento" [class.invalido]="ficha.controls.rendimento.invalid" />
+        </label>
+
+        <div class="tabela-rolagem">
+          <table class="tabela ficha-tabela">
+            <thead>
+              <tr>
+                <th>Ingrediente</th><th class="col-num">Quantidade</th><th>Un.</th><th class="col-num">Fator de correção</th>
+                <th class="num">Custo unit.</th><th class="num">Custo</th><th class="col-acao"></th>
+              </tr>
+            </thead>
+            <tbody formArrayName="itens">
+              @for (linha of itens.controls; track linha; let i = $index) {
+                <tr [formGroupName]="i">
+                  <td>
+                    <select formControlName="ingredienteId" [class.invalido]="linhaInvalida(linha, 'ingredienteId')" [attr.aria-label]="'Ingrediente da linha ' + (i + 1)">
+                      <option [ngValue]="null" disabled>Escolha...</option>
+                      @for (ing of opcoes(linha); track ing.id) {
+                        <option [ngValue]="ing.id" [disabled]="usadoEmOutraLinha(ing.id, linha)">{{ ing.nome }}{{ ing.status === 'INATIVO' ? ' (inativo)' : '' }}</option>
+                      }
+                    </select>
+                  </td>
+                  <td><input type="number" min="0.001" step="any" formControlName="quantidade" [class.invalido]="linhaInvalida(linha, 'quantidade')" [attr.aria-label]="'Quantidade da linha ' + (i + 1)" /></td>
+                  <td>{{ ingredienteDa(linha) ? rotulosUnidade[ingredienteDa(linha)!.unidadePadrao] : '—' }}</td>
+                  <td><input type="number" min="1" step="0.01" formControlName="fatorCorrecao" [class.invalido]="linhaInvalida(linha, 'fatorCorrecao')" [attr.aria-label]="'Fator de correção da linha ' + (i + 1)" /></td>
+                  <td class="num">@if (ingredienteDa(linha); as ing) { {{ ing.custoUnitario | currency:'BRL':'symbol':'1.2-4' }} } @else { — }</td>
+                  <td class="num">@if (custoDaLinha(i) !== null) { {{ custoDaLinha(i) | currency:'BRL':'symbol':'1.2-2' }} } @else { — }</td>
+                  <td class="col-acao">
+                    <button type="button" class="btn-icone" (click)="removerLinha(i)" [disabled]="itens.length === 1" [attr.aria-label]="'Remover linha ' + (i + 1)" title="Remover">×</button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        @if (ficha.touched && ficha.invalid) {
+          <span class="erro">Cada linha precisa de ingrediente, quantidade maior que zero e fator de correção de no mínimo 1,0.</span>
+        }
+        <div><button type="button" class="btn-sec" (click)="adicionarLinha()">+ Adicionar ingrediente</button></div>
+        <small>Fator de correção = perda no preparo. Ex.: 1,25 quando 20% do tomate vai fora ao limpar. Nunca menor que 1,0.</small>
+
+        <label>Modo de preparo
+          <textarea rows="6" formControlName="modoPreparo" maxlength="5000" placeholder="1. ...&#10;2. ..."></textarea>
+        </label>
+
+        @if (erroFicha()) { <p class="erro">{{ erroFicha() }}</p> }
+        <div class="barra-acoes">
+          <button type="submit" class="btn" [disabled]="salvandoFicha()">{{ salvandoFicha() ? 'Salvando...' : 'Salvar ficha técnica' }}</button>
+        </div>
+      </form>
+    </section>
+  }
+</div>
+}

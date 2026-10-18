@@ -26,6 +26,7 @@ body { margin: 0; font-family: system-ui, sans-serif; color: #222; }
 .toasts { position: fixed; right: 1rem; bottom: 1rem; left: 1rem; display: grid; gap: .5rem; justify-items: end; z-index: 100; pointer-events: none; }
 .toast { pointer-events: auto; display: flex; align-items: center; gap: .75rem; max-width: 420px; background: #1b5e20; color: #fff; padding: .7rem .9rem; border-radius: 8px; box-shadow: 0 4px 14px rgba(0,0,0,.25); }
 .toast-erro { background: #b00020; }
+.toast-aviso { background: #8a5a00; }
 .toast button { background: none; border: 0; color: inherit; font-size: 1.25rem; line-height: 1; cursor: pointer; padding: 0 .25rem; }
 
 /* ===== Etiqueta de status do pedido ===== */
@@ -120,3 +121,34 @@ body { margin: 0; font-family: system-ui, sans-serif; color: #222; }
 .estado { grid-column: 1 / -1; text-align: center; color: #555; padding: 2.5rem 1rem; }
 .estado .btn { margin-top: .75rem; }
 .janela header + form, .janela header + p { margin-top: .75rem; }
+
+/* ===== Cardápio do admin: pratos e ficha técnica (blocos 3 e 4) ===== */
+.fc-VERDE { background: #d7f0da; color: #1b5e20; }
+.fc-AMARELO { background: #fff3cd; color: #6b4e00; }
+.fc-VERMELHO { background: #fbdadf; color: #8a0019; }
+.st-PAUSADO { background: #fff3cd; color: #6b4e00; }
+.miniatura { width: 48px; height: 48px; object-fit: cover; border-radius: 6px; background: #eee; display: block; }
+.celula-prato strong { display: block; }
+.celula-prato small { color: #666; }
+.cartao { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 1rem; }
+.cartao h2 { margin: 0 0 .75rem; font-size: 1.1rem; }
+.prato-layout { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 1rem; align-items: start; }
+.prato-layout .largo { grid-column: 1 / -1; }
+.foto-previa { width: 100%; max-height: 160px; object-fit: cover; border-radius: 6px; background: #eee; }
+.form-janela textarea { padding: .55rem; border: 1px solid #bbb; border-radius: 6px; font: inherit; resize: vertical; }
+.ficha-tabela input, .ficha-tabela select { width: 100%; box-sizing: border-box; padding: .4rem; border: 1px solid #bbb; border-radius: 6px; font: inherit; background: #fff; }
+.ficha-tabela input.invalido, .ficha-tabela select.invalido { border-color: #b00020; }
+.ficha-tabela td { padding: .4rem .5rem; }
+.ficha-tabela .col-num { width: 7.5rem; }
+.ficha-tabela .col-acao { width: 2.5rem; text-align: center; }
+.btn-icone { background: none; border: 0; color: #b00020; font-size: 1.2rem; cursor: pointer; padding: .2rem .4rem; }
+.btn-icone:disabled { color: #ccc; cursor: not-allowed; }
+.custo-painel dl { display: grid; grid-template-columns: 1fr auto; gap: .35rem 1rem; margin: 0 0 .75rem; }
+.custo-painel dt { color: #555; }
+.custo-painel dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
+.food-cost { display: flex; align-items: baseline; justify-content: space-between; gap: .5rem; padding: .75rem; border-radius: 8px; margin-bottom: .5rem; }
+.food-cost strong { font-size: 2rem; line-height: 1; }
+.alerta-fc { margin: .5rem 0 0; padding: .6rem .75rem; border-radius: 6px; background: #fbdadf; color: #8a0019; font-size: .9rem; }
+.barra-acoes { display: flex; justify-content: flex-end; gap: .5rem; flex-wrap: wrap; margin-top: .75rem; }
+@media (max-width: 900px) { .prato-layout { grid-template-columns: 1fr; } }
+a.btn-sec { text-decoration: none; display: inline-block; }

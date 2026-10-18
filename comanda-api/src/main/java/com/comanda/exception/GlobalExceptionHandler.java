@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -38,6 +39,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     ResponseEntity<Map<String, Object>> corpoInvalido(HttpMessageNotReadableException e) {
         return corpo(HttpStatus.BAD_REQUEST, "Dados enviados em formato inválido.");
+    }
+
+    // Regra do próprio banco (ex.: SKU repetido gravado ao mesmo tempo por duas pessoas)
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    ResponseEntity<Map<String, Object>> integridade(DataIntegrityViolationException e) {
+        return corpo(HttpStatus.CONFLICT, "Não foi possível salvar: o registro está duplicado ou em uso.");
     }
 
     @ExceptionHandler(AccessDeniedException.class)

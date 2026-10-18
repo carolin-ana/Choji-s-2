@@ -16,16 +16,18 @@ public class CardapioService {
     public CardapioService(PratoRepository pratos) { this.pratos = pratos; }
 
     @Transactional(readOnly = true)
-    public List<PratoResponse> listar(String categoria) { // RN09: só pratos ATIVO
+    public List<PratoResponse> listar(String categoria) { // RN09: só pratos ATIVO de categorias ATIVAS
         var lista = (categoria == null || categoria.isBlank())
-            ? pratos.findByStatus(StatusRegistro.ATIVO)
-            : pratos.findByStatusAndCategoriaNome(StatusRegistro.ATIVO, categoria);
+            ? pratos.cardapio(StatusRegistro.ATIVO)
+            : pratos.cardapioPorCategoria(StatusRegistro.ATIVO, categoria);
         return lista.stream().map(this::resposta).toList();
     }
 
     @Transactional(readOnly = true)
     public PratoResponse buscar(Long id) {
-        return pratos.findById(id).filter(p -> p.getStatus() == StatusRegistro.ATIVO).map(this::resposta)
+        return pratos.findById(id)
+            .filter(p -> p.getStatus() == StatusRegistro.ATIVO && p.getCategoria().getStatus() == StatusRegistro.ATIVO)
+            .map(this::resposta)
             .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Prato não encontrado."));
     }
 

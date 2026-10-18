@@ -1,0 +1,110 @@
+<div class="painel-titulo">
+  <h1>Ingredientes</h1>
+  <div class="titulo-acoes">
+    <span class="dica">O custo unitário entra no cálculo das fichas técnicas</span>
+    <button type="button" class="btn" (click)="abrirNovo()">+ Novo ingrediente</button>
+  </div>
+</div>
+
+<form class="filtros-admin" [formGroup]="filtros">
+  <label>Buscar <input type="search" formControlName="busca" placeholder="Nome ou SKU" /></label>
+  <label>Situação
+    <select formControlName="status">
+      <option value="">Todos</option>
+      <option value="ATIVO">Ativo</option>
+      <option value="INATIVO">Inativo</option>
+    </select>
+  </label>
+  <button type="button" class="btn-sec" (click)="limpar()" [disabled]="!temFiltro()">Limpar filtros</button>
+</form>
+
+@if (erroLista()) { <p class="erro">Não foi possível carregar os ingredientes. Confira se o servidor está no ar.</p> }
+
+@if (pagina(); as pg) {
+  @if (pg.content.length) {
+    <div class="tabela-rolagem">
+      <table class="tabela">
+        <thead><tr><th>Nome</th><th>SKU</th><th class="num">Custo unitário</th><th class="num">Estoque mínimo</th><th>Situação</th><th class="num">Ações</th></tr></thead>
+        <tbody>
+          @for (i of pg.content; track i.id) {
+            <tr [class.inativo]="i.status === 'INATIVO'">
+              <td>{{ i.nome }}</td>
+              <td>{{ i.sku }}</td>
+              <td class="num">{{ i.custoUnitario | currency:'BRL':'symbol':'1.2-4' }} / {{ rotulosUnidade[i.unidadePadrao] }}</td>
+              <td class="num">{{ i.estoqueMinimo | number:'1.0-3' }} {{ rotulosUnidade[i.unidadePadrao] }}</td>
+              <td><span [class]="'badge st-' + i.status">{{ i.status === 'ATIVO' ? 'Ativo' : 'Inativo' }}</span></td>
+              <td class="num">
+                <div class="acoes">
+                  <button type="button" class="btn-sec" (click)="abrirEdicao(i)">Editar</button>
+                  @if (i.status === 'ATIVO') {
+                    <button type="button" class="btn-sec perigo" (click)="desativando.set(i)" [disabled]="ocupado() === i.id">Desativar</button>
+                  } @else {
+                    <button type="button" class="btn-sec" (click)="reativar(i)" [disabled]="ocupado() === i.id">Reativar</button>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  } @else {
+    <p class="vazio">@if (temFiltro()) { Nenhum ingrediente com estes filtros. } @else { Nenhum ingrediente cadastrado. }</p>
+  }
+  @if (pg.totalElements > 0) {
+    <nav class="paginacao" aria-label="Paginação">
+      <button type="button" class="btn-sec" (click)="irPara(pg.page - 1)" [disabled]="pg.page === 0">← Anterior</button>
+      <span>Página {{ pg.page + 1 }} de {{ pg.totalPages }} · {{ pg.totalElements }} ingredientes</span>
+      <button type="button" class="btn-sec" (click)="irPara(pg.page + 1)" [disabled]="pg.page + 1 >= pg.totalPages">Próxima →</button>
+    </nav>
+  }
+} @else if (carregando()) { <p class="vazio">Carregando ingredientes...</p> }
+
+@if (formAberto()) {
+  <div class="janela-fundo" (click)="formAberto.set(false)">
+    <section class="janela estreita" role="dialog" aria-modal="true" aria-label="Ingrediente" (click)="$event.stopPropagation()">
+      <header><h2>{{ editando() ? 'Editar ingrediente' : 'Novo ingrediente' }}</h2></header>
+      <form class="form-janela" [formGroup]="form" (ngSubmit)="salvar()">
+        <label>Nome <input formControlName="nome" autocomplete="off" [class.invalido]="invalido('nome')" /></label>
+        @if (invalido('nome')) { <span class="erro">Informe o nome.</span> }
+        <div class="duas-colunas">
+          <label>SKU <input formControlName="sku" autocomplete="off" placeholder="Ex.: ING-030" [class.invalido]="invalido('sku')" /></label>
+          <label>Unidade padrão
+            <select formControlName="unidadePadrao">
+              @for (u of unidades; track u) { <option [value]="u">{{ rotulosUnidade[u] }}</option> }
+            </select>
+          </label>
+        </div>
+        @if (invalido('sku')) { <span class="erro">Informe o SKU.</span> }
+        <div class="duas-colunas">
+          <label>Custo por {{ rotulosUnidade[form.controls.unidadePadrao.value] }} (R$)
+            <input type="number" min="0" step="0.0001" formControlName="custoUnitario" [class.invalido]="invalido('custoUnitario')" />
+          </label>
+          <label>Estoque mínimo ({{ rotulosUnidade[form.controls.unidadePadrao.value] }})
+            <input type="number" min="0" step="0.001" formControlName="estoqueMinimo" [class.invalido]="invalido('estoqueMinimo')" />
+          </label>
+        </div>
+        <small>Ex.: macarrão comprado a R$ 30,00 o quilo custa R$ 0,0300 por grama.</small>
+        @if (invalido('custoUnitario') || invalido('estoqueMinimo')) { <span class="erro">Use valores iguais ou maiores que zero.</span> }
+        @if (erroForm()) { <p class="erro">{{ erroForm() }}</p> }
+        <footer>
+          <button type="button" class="btn-sec" (click)="formAberto.set(false)">Cancelar</button>
+          <button type="submit" class="btn" [disabled]="salvando()">{{ salvando() ? 'Salvando...' : 'Salvar' }}</button>
+        </footer>
+      </form>
+    </section>
+  </div>
+}
+
+@if (desativando(); as i) {
+  <div class="janela-fundo" (click)="desativando.set(null)">
+    <section class="janela estreita" role="dialog" aria-modal="true" aria-label="Desativar ingrediente" (click)="$event.stopPropagation()">
+      <header><h2>Desativar {{ i.nome }}?</h2></header>
+      <p>Ele deixa de aparecer para novas fichas técnicas. As fichas que já usam este ingrediente continuam calculando o custo normalmente.</p>
+      <footer>
+        <button type="button" class="btn-sec" (click)="desativando.set(null)">Voltar</button>
+        <button type="button" class="btn" (click)="confirmarDesativacao()" [disabled]="ocupado() === i.id">Desativar</button>
+      </footer>
+    </section>
+  </div>
+}

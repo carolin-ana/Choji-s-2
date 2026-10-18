@@ -1,0 +1,93 @@
+<div class="painel-titulo">
+  <h1>Categorias</h1>
+  <div class="titulo-acoes">
+    <span class="dica">A ordem define a sequência no cardápio</span>
+    <button type="button" class="btn" (click)="abrirNova()">+ Nova categoria</button>
+  </div>
+</div>
+
+<form class="filtros-admin" [formGroup]="filtros">
+  <label>Buscar <input type="search" formControlName="busca" placeholder="Nome da categoria" /></label>
+  <label>Situação
+    <select formControlName="status">
+      <option value="">Todas</option>
+      <option value="ATIVO">Ativa</option>
+      <option value="INATIVO">Inativa</option>
+    </select>
+  </label>
+  <button type="button" class="btn-sec" (click)="limpar()" [disabled]="!temFiltro()">Limpar filtros</button>
+</form>
+
+@if (erroLista()) { <p class="erro">Não foi possível carregar as categorias. Confira se o servidor está no ar.</p> }
+
+@if (pagina(); as pg) {
+  @if (pg.content.length) {
+    <div class="tabela-rolagem">
+      <table class="tabela">
+        <thead><tr><th>Ordem</th><th>Nome</th><th>Descrição</th><th>Situação</th><th class="num">Ações</th></tr></thead>
+        <tbody>
+          @for (c of pg.content; track c.id) {
+            <tr [class.inativo]="c.status === 'INATIVO'">
+              <td>{{ c.ordem }}</td>
+              <td>{{ c.nome }}</td>
+              <td>{{ c.descricao || '—' }}</td>
+              <td><span [class]="'badge st-' + c.status">{{ c.status === 'ATIVO' ? 'Ativa' : 'Inativa' }}</span></td>
+              <td class="num">
+                <div class="acoes">
+                  <button type="button" class="btn-sec" (click)="abrirEdicao(c)">Editar</button>
+                  @if (c.status === 'ATIVO') {
+                    <button type="button" class="btn-sec perigo" (click)="desativando.set(c)" [disabled]="ocupado() === c.id">Desativar</button>
+                  } @else {
+                    <button type="button" class="btn-sec" (click)="reativar(c)" [disabled]="ocupado() === c.id">Reativar</button>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  } @else {
+    <p class="vazio">@if (temFiltro()) { Nenhuma categoria com estes filtros. } @else { Nenhuma categoria cadastrada. }</p>
+  }
+  @if (pg.totalPages > 1) {
+    <nav class="paginacao" aria-label="Paginação">
+      <button type="button" class="btn-sec" (click)="irPara(pg.page - 1)" [disabled]="pg.page === 0">← Anterior</button>
+      <span>Página {{ pg.page + 1 }} de {{ pg.totalPages }} · {{ pg.totalElements }} categorias</span>
+      <button type="button" class="btn-sec" (click)="irPara(pg.page + 1)" [disabled]="pg.page + 1 >= pg.totalPages">Próxima →</button>
+    </nav>
+  }
+} @else if (carregando()) { <p class="vazio">Carregando categorias...</p> }
+
+@if (formAberto()) {
+  <div class="janela-fundo" (click)="formAberto.set(false)">
+    <section class="janela estreita" role="dialog" aria-modal="true" aria-label="Categoria" (click)="$event.stopPropagation()">
+      <header><h2>{{ editando() ? 'Editar categoria' : 'Nova categoria' }}</h2></header>
+      <form class="form-janela" [formGroup]="form" (ngSubmit)="salvar()">
+        <label>Nome <input formControlName="nome" autocomplete="off" [class.invalido]="invalido('nome')" /></label>
+        @if (invalido('nome')) { <span class="erro">Informe o nome.</span> }
+        <label>Descrição <input formControlName="descricao" autocomplete="off" placeholder="Opcional" /></label>
+        <label>Ordem no cardápio <input type="number" min="0" max="999" formControlName="ordem" [class.invalido]="invalido('ordem')" /></label>
+        @if (invalido('ordem')) { <span class="erro">Use um número de 0 a 999.</span> }
+        @if (erroForm()) { <p class="erro">{{ erroForm() }}</p> }
+        <footer>
+          <button type="button" class="btn-sec" (click)="formAberto.set(false)">Cancelar</button>
+          <button type="submit" class="btn" [disabled]="salvando()">{{ salvando() ? 'Salvando...' : 'Salvar' }}</button>
+        </footer>
+      </form>
+    </section>
+  </div>
+}
+
+@if (desativando(); as c) {
+  <div class="janela-fundo" (click)="desativando.set(null)">
+    <section class="janela estreita" role="dialog" aria-modal="true" aria-label="Desativar categoria" (click)="$event.stopPropagation()">
+      <header><h2>Desativar {{ c.nome }}?</h2></header>
+      <p>Os pratos desta categoria deixam de aparecer no cardápio do cliente. Eles continuam cadastrados e você pode reativar a categoria depois.</p>
+      <footer>
+        <button type="button" class="btn-sec" (click)="desativando.set(null)">Voltar</button>
+        <button type="button" class="btn" (click)="confirmarDesativacao()" [disabled]="ocupado() === c.id">Desativar</button>
+      </footer>
+    </section>
+  </div>
+}

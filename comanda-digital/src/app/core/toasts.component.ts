@@ -8,7 +8,7 @@ import { ToastService } from './toast.service';
   template: `
   <div class="toasts" aria-live="polite">
     @for (t of toast.lista(); track t.id) {
-      <div class="toast" [class.toast-erro]="t.tipo === 'erro'">
+      <div class="toast" [class.toast-erro]="t.tipo === 'erro'" [class.toast-aviso]="t.tipo === 'aviso'">
         <span>{{ t.texto }}</span>
         <button type="button" (click)="toast.fechar(t.id)" aria-label="Fechar aviso">×</button>
       </div>

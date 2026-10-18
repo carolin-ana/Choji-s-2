@@ -8,6 +8,10 @@ import { PedidosComponent } from './pages/pedidos/pedidos.component';
 import { AdminLayoutComponent } from './pages/admin/admin-layout.component';
 import { PedidosAdminComponent } from './pages/admin/pedidos-admin.component';
 import { UsuariosAdminComponent } from './pages/admin/usuarios-admin.component';
+import { PratosAdminComponent } from './pages/admin/pratos-admin.component';
+import { PratoFormComponent } from './pages/admin/prato-form.component';
+import { CategoriasAdminComponent } from './pages/admin/categorias-admin.component';
+import { IngredientesAdminComponent } from './pages/admin/ingredientes-admin.component';
 
 export const routes: Routes = [
   { path: '', component: CardapioComponent },
@@ -27,6 +31,12 @@ export const routes: Routes = [
       { path: 'pedidos', component: PedidosAdminComponent },
       // RF-041: só o ADMIN gerencia usuários (o roleGuard da rota filha restringe mais que o da moldura)
       { path: 'usuarios', component: UsuariosAdminComponent, canActivate: [roleGuard('ADMIN')] },
+      // Blocos 3 e 4: cardápio, ficha técnica e ingredientes (ADMIN e GERENTE; o cozinheiro não entra)
+      { path: 'pratos', component: PratosAdminComponent, canActivate: [roleGuard('ADMIN', 'GERENTE')] },
+      { path: 'pratos/novo', component: PratoFormComponent, canActivate: [roleGuard('ADMIN', 'GERENTE')] },
+      { path: 'pratos/:id', component: PratoFormComponent, canActivate: [roleGuard('ADMIN', 'GERENTE')] },
+      { path: 'categorias', component: CategoriasAdminComponent, canActivate: [roleGuard('ADMIN', 'GERENTE')] },
+      { path: 'ingredientes', component: IngredientesAdminComponent, canActivate: [roleGuard('ADMIN', 'GERENTE')] },
     ],
   },
   { path: '**', redirectTo: '' },
