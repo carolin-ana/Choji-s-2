@@ -4,6 +4,7 @@ import com.comanda.model.CanalPedido;
 import com.comanda.model.Pedido;
 import com.comanda.model.StatusPedido;
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -27,4 +28,15 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
         """)
     Page<Pedido> filtrar(@Param("status") List<StatusPedido> status, @Param("canal") List<CanalPedido> canal,
                          @Param("inicio") LocalDateTime inicio, @Param("fim") LocalDateTime fim, Pageable pageable);
+
+    // ---- Dashboard (bloco 9) ----
+    // RF-034/RF-037: data e valor de cada pedido vendido no período (o agrupamento por dia é feito no Service)
+    @Query("""
+        select p.createdAt, p.valorTotal from Pedido p
+        where p.status in :status and p.createdAt >= :inicio and p.createdAt < :fim
+        """)
+    List<Object[]> vendas(@Param("status") Collection<StatusPedido> status, @Param("inicio") LocalDateTime inicio,
+                          @Param("fim") LocalDateTime fim);
+
+    long countByStatusAndCreatedAtGreaterThanEqualAndCreatedAtLessThan(StatusPedido status, LocalDateTime inicio, LocalDateTime fim);
 }

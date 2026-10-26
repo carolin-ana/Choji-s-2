@@ -15,6 +15,7 @@ import { ROTULOS_PERFIL } from '../../core/models';
     <header class="painel-topo">
       <strong class="painel-marca">Comanda Digital <span>Painel</span></strong>
       <nav class="painel-menu" aria-label="Menu do painel">
+        @if (gerencia()) { <a routerLink="/admin/dashboard" routerLinkActive="ativo">Dashboard</a> }
         <a routerLink="/admin/pedidos" routerLinkActive="ativo">Pedidos</a>
         @if (gerencia()) {
           <a routerLink="/admin/pratos" routerLinkActive="ativo">Pratos</a>

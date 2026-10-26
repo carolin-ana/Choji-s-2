@@ -147,4 +147,19 @@ public final class Dtos {
     public record PratoAfetadoResponse(Long pratoId, String prato, BigDecimal foodCost, FaixaFoodCost faixa) {}
     // O que mudou com o recebimento: custos novos (RN05) e o food cost recalculado dos pratos que usam esses ingredientes
     public record RecebimentoResponse(CompraResponse compra, List<CustoAlteradoResponse> custos, List<PratoAfetadoResponse> pratos) {}
+
+    // ---- Dashboard (bloco 9) ----
+    // RF-034: números de um dia. foodCostMedio = null quando não houve venda (não dá para calcular).
+    public record ResumoResponse(java.time.LocalDate data, BigDecimal faturamento, long pedidos, BigDecimal ticketMedio,
+                                 BigDecimal foodCostMedio, FaixaFoodCost faixaFoodCost,
+                                 BigDecimal faturamentoDiaAnterior, long pedidosDiaAnterior,
+                                 long pedidosAguardando, long pedidosCancelados) {}
+    // RF-035
+    public record TopPratoResponse(Long pratoId, String prato, String categoria, long quantidade, BigDecimal faturamento,
+                                   BigDecimal percentualQuantidade) {}
+    // RF-037: um dia do gráfico de linha + os totais do período (tabela resumo)
+    public record VendaDiaResponse(java.time.LocalDate data, long pedidos, BigDecimal faturamento, BigDecimal ticketMedio) {}
+    public record VendasResponse(java.time.LocalDate inicio, java.time.LocalDate fim, BigDecimal faturamento, long pedidos,
+                                 BigDecimal ticketMedio, BigDecimal foodCostMedio, FaixaFoodCost faixaFoodCost,
+                                 List<VendaDiaResponse> dias) {}
 }

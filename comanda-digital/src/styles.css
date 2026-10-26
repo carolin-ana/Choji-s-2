@@ -215,3 +215,34 @@ small.conversao { display: block; color: #666; font-size: .78rem; margin-top: .1
 /* no celular o gráfico mantém uma largura mínima legível e rola de lado dentro do cartão */
 .grafico-rolagem { overflow-x: auto; }
 .grafico-rolagem .grafico-area { min-width: 720px; }
+
+/* ---- Bloco 9: dashboard ---- */
+.secao-titulo { font-size: 1rem; margin: .25rem 0 .6rem; color: #333; }
+.secao-titulo small { font-weight: 400; color: #666; margin-left: .35rem; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: .75rem; margin-bottom: 1.25rem; }
+.kpi { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: .9rem 1rem; display: grid; gap: .3rem; align-content: start; }
+.kpi-rotulo { font-size: .85rem; color: #555; }
+.kpi-valor { font-size: 1.8rem; line-height: 1.1; font-variant-numeric: tabular-nums; color: #111; }
+.kpi-detalhe { font-size: .85rem; color: #666; }
+.kpi-detalhe .qtd-mais, .kpi-detalhe .qtd-menos { font-weight: 600; }
+.filtro-periodo .atalhos { display: flex; gap: .35rem; flex-wrap: wrap; }
+.btn-sec.selecionado { background: #1f1f23; color: #fff; border-color: #1f1f23; }
+.dash-grade { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 1rem; align-items: start; }
+.dash-grade .largo { grid-column: 1 / -1; }
+.dash-grade .painel-titulo h2 { margin: 0 0 .5rem; }
+@media (max-width: 900px) { .dash-grade { grid-template-columns: 1fr; } }
+.grafico-canvas { position: relative; width: 100%; }
+.tabela-compacta { margin-top: .75rem; }
+.tabela-compacta td small.dica { font-size: .78rem; }
+.lista-alertas { list-style: none; padding: 0; margin: 0 0 .75rem; display: grid; gap: .6rem; }
+.lista-alertas li { display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding-bottom: .6rem; border-bottom: 1px solid #eee; }
+.lista-alertas li > div { display: grid; gap: .2rem; flex: 1; min-width: 0; }
+.lista-alertas small { color: #8a0019; }
+.barra-nivel { display: block; height: 6px; background: #f1e3e5; border-radius: 3px; overflow: hidden; }
+.barra-nivel span { display: block; height: 100%; background: #c41e3a; border-radius: 3px; max-width: 100%; }
+.estoque-ok { display: flex; align-items: center; gap: .5rem; color: #333; }
+.resumo-periodo { display: flex; flex-wrap: wrap; gap: .5rem 1.75rem; margin: 0 0 .9rem; }
+.resumo-periodo div { display: grid; gap: .1rem; }
+.resumo-periodo dt { font-size: .8rem; color: #666; }
+.resumo-periodo dd { margin: 0; font-size: 1.1rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.cartao h2 .badge-alerta { vertical-align: middle; }

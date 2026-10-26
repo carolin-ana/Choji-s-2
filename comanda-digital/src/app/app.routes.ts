@@ -1,4 +1,6 @@
 import { Routes } from '@angular/router';
+import { inject } from '@angular/core';
+import { AuthService } from './core/auth.service';
 import { authGuard, roleGuard } from './core/guards';
 import { CardapioComponent } from './pages/cardapio/cardapio.component';
 import { AuthComponent } from './pages/auth/auth.component';
@@ -18,6 +20,7 @@ import { FornecedoresAdminComponent } from './pages/admin/fornecedores-admin.com
 import { CotacaoAdminComponent } from './pages/admin/cotacao-admin.component';
 import { ComprasAdminComponent } from './pages/admin/compras-admin.component';
 import { CompraFormComponent } from './pages/admin/compra-form.component';
+import { DashboardAdminComponent } from './pages/admin/dashboard-admin.component';
 
 export const routes: Routes = [
   { path: '', component: CardapioComponent },
@@ -33,7 +36,10 @@ export const routes: Routes = [
     path: 'admin', component: AdminLayoutComponent,
     canActivate: [authGuard, roleGuard('ADMIN', 'GERENTE', 'COZINHEIRO')],
     children: [
-      { path: '', pathMatch: 'full', redirectTo: 'pedidos' },
+      // Admin e gerente caem no dashboard; o cozinheiro cai direto nos pedidos
+      { path: '', pathMatch: 'full', redirectTo: () => inject(AuthService).temPerfil(['ADMIN', 'GERENTE']) ? 'dashboard' : 'pedidos' },
+      // Bloco 9: dashboard (ADMIN e GERENTE)
+      { path: 'dashboard', component: DashboardAdminComponent, canActivate: [roleGuard('ADMIN', 'GERENTE')] },
       { path: 'pedidos', component: PedidosAdminComponent },
       // RF-041: só o ADMIN gerencia usuários (o roleGuard da rota filha restringe mais que o da moldura)
       { path: 'usuarios', component: UsuariosAdminComponent, canActivate: [roleGuard('ADMIN')] },

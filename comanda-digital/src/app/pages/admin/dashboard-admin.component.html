@@ -1,0 +1,160 @@
+<div class="painel-titulo">
+  <h1>Dashboard</h1>
+  <div class="titulo-acoes">
+    <span class="dica">Vendas = pedidos confirmados (cancelados e aguardando confirmação ficam de fora)</span>
+    <button type="button" class="btn-sec" (click)="atualizarTudo()">Atualizar</button>
+  </div>
+</div>
+
+<!-- RF-034: KPIs de hoje -->
+<h2 class="secao-titulo">Hoje @if (resumo(); as r) { <small>{{ r.data + 'T00:00:00' | date:'EEEE, dd/MM' }}</small> }</h2>
+@if (erroResumo()) {
+  <p class="erro">Não foi possível carregar os números de hoje. Confira se o servidor está no ar e clique em Atualizar.</p>
+} @else if (resumo(); as r) {
+  <section class="kpis" aria-label="Números de hoje">
+    <article class="kpi">
+      <span class="kpi-rotulo">Faturamento</span>
+      <strong class="kpi-valor">{{ r.faturamento | currency:'BRL' }}</strong>
+      <span class="kpi-detalhe">
+        @if (variacao(); as v) {
+          <span [class]="v >= 0 ? 'qtd-mais' : 'qtd-menos'">{{ v >= 0 ? '▲' : '▼' }} {{ (v < 0 ? -v : v) | number:'1.0-1' }}%</span> vs. ontem ({{ r.faturamentoDiaAnterior | currency:'BRL' }})
+        } @else { Ontem: {{ r.faturamentoDiaAnterior | currency:'BRL' }} }
+      </span>
+    </article>
+    <article class="kpi">
+      <span class="kpi-rotulo">Pedidos confirmados</span>
+      <strong class="kpi-valor">{{ r.pedidos }}</strong>
+      <span class="kpi-detalhe">
+        Ontem: {{ r.pedidosDiaAnterior }}
+        @if (r.pedidosAguardando) { · <a routerLink="/admin/pedidos">{{ r.pedidosAguardando }} aguardando</a> }
+        @if (r.pedidosCancelados) { · {{ r.pedidosCancelados }} {{ r.pedidosCancelados === 1 ? 'cancelado' : 'cancelados' }} }
+      </span>
+    </article>
+    <article class="kpi">
+      <span class="kpi-rotulo">Ticket médio</span>
+      <strong class="kpi-valor">{{ r.ticketMedio | currency:'BRL' }}</strong>
+      <span class="kpi-detalhe">Faturamento ÷ pedidos</span>
+    </article>
+    <article class="kpi">
+      <span class="kpi-rotulo">Food cost médio</span>
+      @if (r.foodCostMedio !== null) {
+        <strong class="kpi-valor">{{ r.foodCostMedio | number:'1.1-1' }}%</strong>
+        <span class="kpi-detalhe"><span [class]="'badge fc-' + r.faixaFoodCost">{{ rotulosFaixa[r.faixaFoodCost!] }}</span></span>
+      } @else {
+        <strong class="kpi-valor">—</strong>
+        <span class="kpi-detalhe">Sem vendas hoje</span>
+      }
+    </article>
+  </section>
+} @else {
+  <p class="vazio">Carregando os números de hoje...</p>
+}
+
+<!-- Filtro de período (vale para o top 5 e para as vendas por dia) -->
+<form class="filtros-admin filtro-periodo" [formGroup]="periodo" (ngSubmit)="aplicarDatas()">
+  <div class="atalhos" role="group" aria-label="Período">
+    <button type="button" class="btn-sec" [class.selecionado]="atalho() === '7'" [attr.aria-pressed]="atalho() === '7'" (click)="usarAtalho('7')">7 dias</button>
+    <button type="button" class="btn-sec" [class.selecionado]="atalho() === '30'" [attr.aria-pressed]="atalho() === '30'" (click)="usarAtalho('30')">30 dias</button>
+    <button type="button" class="btn-sec" [class.selecionado]="atalho() === 'mes'" [attr.aria-pressed]="atalho() === 'mes'" (click)="usarAtalho('mes')">Este mês</button>
+  </div>
+  <label>De <input type="date" formControlName="dataInicio" /></label>
+  <label>Até <input type="date" formControlName="dataFim" /></label>
+  <button type="submit" class="btn-sec">Aplicar</button>
+</form>
+@if (erroPeriodo()) { <p class="erro">{{ erroPeriodo() }}</p> }
+
+<div class="dash-grade">
+  <!-- RF-035: top 5 -->
+  <section class="cartao">
+    <h2>Top 5 pratos mais vendidos</h2>
+    @if (carregandoPeriodo() && !top().length) {
+      <p class="dica">Carregando...</p>
+    } @else if (top().length) {
+      <app-grafico-chart [config]="graficoTop()" [altura]="top().length * 44 + 40" descricao="Gráfico de barras com as unidades vendidas dos 5 pratos mais vendidos no período" />
+      <table class="tabela tabela-compacta">
+        <thead><tr><th>Prato</th><th class="num">Unid.</th><th class="num">Faturamento</th></tr></thead>
+        <tbody>
+          @for (p of top(); track p.pratoId; let i = $index) {
+            <tr>
+              <td class="celula-prato"><strong>{{ i + 1 }}. {{ p.prato }}</strong><small>{{ p.categoria }}</small></td>
+              <td class="num">{{ p.quantidade }} <small class="dica">({{ p.percentualQuantidade | number:'1.0-1' }}%)</small></td>
+              <td class="num">{{ p.faturamento | currency:'BRL' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    } @else {
+      <p class="vazio">Nenhuma venda confirmada no período.</p>
+    }
+  </section>
+
+  <!-- RF-036: alertas de estoque -->
+  <section class="cartao">
+    <h2>Estoque crítico @if (totalAlertas()) { <span class="badge-alerta">{{ totalAlertas() }}</span> }</h2>
+    @if (alertas().length) {
+      <ul class="lista-alertas">
+        @for (a of alertas(); track a.ingredienteId) {
+          <li>
+            <div>
+              <strong>{{ a.ingrediente }}</strong>
+              <small>{{ a.saldo | number:'1.0-3' }} de {{ a.estoqueMinimo | number:'1.0-3' }} {{ rotulosUnidade[a.unidade] }} (mínimo)</small>
+              <span class="barra-nivel" [attr.aria-label]="'Saldo em ' + (a.saldo / a.estoqueMinimo * 100 | number:'1.0-0') + '% do mínimo'">
+                <span [style.width.%]="a.saldo <= 0 ? 0 : (a.saldo / a.estoqueMinimo * 100)"></span>
+              </span>
+            </div>
+            <a class="btn-sec" routerLink="/admin/cotacao" [queryParams]="{ ingredienteId: a.ingredienteId }">Cotar</a>
+          </li>
+        }
+      </ul>
+      @if (totalAlertas() > alertas().length) {
+        <a routerLink="/admin/estoque">Ver todos os {{ totalAlertas() }} no estoque</a>
+      }
+    } @else {
+      <p class="estoque-ok"><span class="badge st-OK">Ok</span> Nenhum ingrediente abaixo do mínimo.</p>
+    }
+  </section>
+
+  <!-- RF-037: vendas por período -->
+  <section class="cartao largo">
+    <div class="painel-titulo">
+      <h2>Faturamento por dia</h2>
+      @if (vendas()) {
+        <button type="button" class="btn-sec" (click)="verDias.set(!verDias())">{{ verDias() ? 'Ver gráfico' : 'Ver dia a dia (tabela)' }}</button>
+      }
+    </div>
+    @if (vendas(); as v) {
+      <dl class="resumo-periodo">
+        <div><dt>Faturamento</dt><dd>{{ v.faturamento | currency:'BRL' }}</dd></div>
+        <div><dt>Pedidos</dt><dd>{{ v.pedidos }}</dd></div>
+        <div><dt>Ticket médio</dt><dd>{{ v.ticketMedio | currency:'BRL' }}</dd></div>
+        <div><dt>Food cost médio</dt><dd>@if (v.foodCostMedio !== null) { <span [class]="'badge fc-' + v.faixaFoodCost">{{ v.foodCostMedio | number:'1.1-1' }}%</span> } @else { — }</dd></div>
+        @if (melhorDia(); as m) {
+          @if (m.faturamento > 0) { <div><dt>Melhor dia</dt><dd>{{ m.data + 'T00:00:00' | date:'dd/MM' }} · {{ m.faturamento | currency:'BRL' }}</dd></div> }
+        }
+      </dl>
+      @if (verDias()) {
+        <div class="tabela-rolagem">
+          <table class="tabela">
+            <thead><tr><th>Dia</th><th class="num">Pedidos</th><th class="num">Faturamento</th><th class="num">Ticket médio</th></tr></thead>
+            <tbody>
+              @for (d of diasDecrescentes(); track d.data) {
+                <tr [class.inativo]="d.pedidos === 0">
+                  <td>{{ d.data + 'T00:00:00' | date:'EEE, dd/MM/yyyy' }}</td>
+                  <td class="num">{{ d.pedidos }}</td>
+                  <td class="num">{{ d.faturamento | currency:'BRL' }}</td>
+                  <td class="num">{{ d.ticketMedio | currency:'BRL' }}</td>
+                </tr>
+              }
+            </tbody>
+            <tfoot><tr><td>Total</td><td class="num">{{ v.pedidos }}</td><td class="num">{{ v.faturamento | currency:'BRL' }}</td><td class="num">{{ v.ticketMedio | currency:'BRL' }}</td></tr></tfoot>
+          </table>
+        </div>
+      } @else {
+        <app-grafico-chart [config]="graficoVendas()" [altura]="300" descricao="Gráfico de linha com o faturamento de cada dia do período" />
+        <p class="dica">Passe o mouse no gráfico para ver o faturamento e o número de pedidos de cada dia.</p>
+      }
+    } @else if (carregandoPeriodo()) {
+      <p class="dica">Carregando...</p>
+    }
+  </section>
+</div>

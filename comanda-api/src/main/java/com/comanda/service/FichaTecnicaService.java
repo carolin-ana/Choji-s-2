@@ -91,12 +91,17 @@ public class FichaTecnicaService {
         BigDecimal foodCost = precoVenda.signum() > 0
                 ? porcao.multiply(CEM).divide(precoVenda, 1, RoundingMode.HALF_UP)
                 : BigDecimal.ZERO;
-        FaixaFoodCost faixa = foodCost.compareTo(LIMITE_VERDE) <= 0 ? FaixaFoodCost.VERDE
-                : foodCost.compareTo(LIMITE_AMARELO) <= 0 ? FaixaFoodCost.AMARELO : FaixaFoodCost.VERMELHO;
+        FaixaFoodCost faixa = faixa(foodCost);
         String alerta = faixa == FaixaFoodCost.VERMELHO // RN02: só avisa, não impede de salvar
                 ? "Food cost de " + foodCost.toPlainString().replace('.', ',') + "% está acima de 35%: revise a ficha técnica ou o preço de venda."
                 : null;
         return new CustoResponse(total, rendimento, porcao, precoVenda, foodCost, faixa, alerta);
+    }
+
+    // Até 30% verde, até 35% amarelo, acima vermelho (usado também pelo food cost médio do dashboard)
+    public static FaixaFoodCost faixa(BigDecimal foodCost) {
+        return foodCost.compareTo(LIMITE_VERDE) <= 0 ? FaixaFoodCost.VERDE
+                : foodCost.compareTo(LIMITE_AMARELO) <= 0 ? FaixaFoodCost.AMARELO : FaixaFoodCost.VERMELHO;
     }
 
     private BigDecimal custoItem(FichaTecnicaItem i) {

@@ -24,6 +24,7 @@ Sistema de pedidos para uma Dark Kitchen (cozinha que só vende por delivery), d
 | GERENTE | `gerente@email.com` | `senha123` | Painel: pedidos, cardápio, estoque, fornecedores, cotação e compras |
 | COZINHEIRO | `cozinheiro@email.com` | `senha123` | Painel: só iniciar preparo e marcar como pronto |
 | CLIENTE | crie em **Entrar → Criar conta** | | Cardápio, carrinho, checkout, acompanhamento e histórico |
+| CLIENTE (demonstração) | `cliente.demo@email.com` | `senha123` | Dono dos pedidos de demonstração dos últimos 30 dias (alimentam o dashboard) |
 
 A equipe (admin, gerente e cozinheiro) entra pela mesma tela de login do site e é levada direto para o painel em `/admin`.
 
@@ -31,7 +32,7 @@ A equipe (admin, gerente e cozinheiro) entra pela mesma tela de login do site e 
 
 | Camada | Tecnologia | Onde está publicado |
 |---|---|---|
-| Front-end | Angular 22 (componentes standalone, signals, Reactive Forms, HttpClient com interceptor JWT, guards de rota) | Vercel |
+| Front-end | Angular 22 (componentes standalone, signals, Reactive Forms, HttpClient com interceptor JWT, guards de rota), Chart.js no dashboard | Vercel |
 | Back-end | Java 17, Spring Boot 3.5, Spring Data JPA, Spring Security + JWT, Bean Validation, SpringDoc (Swagger), Flyway | Render (Docker) |
 | Banco de dados | MySQL 8 | Aiven (plano gratuito) |
 
@@ -47,7 +48,7 @@ A equipe (admin, gerente e cozinheiro) entra pela mesma tela de login do site e 
 | 6 | Integração pedido × estoque (RF-017, 018) | ✅ Pronto |
 | 7 | Fornecedores e compras (RF-021 a 026) | ✅ Pronto |
 | 8 | Controle de estoque (RF-027 a 033) | ✅ Pronto |
-| 9 | Dashboard (RF-034 a 037) | 🚧 Em desenvolvimento |
+| 9 | Dashboard (RF-034 a 037) | ✅ Pronto |
 | 10 | Autenticação e RBAC (RF-038 a 043) | ✅ Pronto |
 
 ### Regras já implementadas
@@ -61,6 +62,7 @@ A equipe (admin, gerente e cozinheiro) entra pela mesma tela de login do site e 
 - Prato só fica ATIVO com ficha técnica (RN01); food cost acima de 35% gera alerta sem bloquear (RN02); fator de correção mínimo 1,0 (RN08). O custo é calculado só no back: `SUM(quantidade × fator de correção × custo unitário) / rendimento`.
 - Estoque por movimentações (entrada, saída e estorno): o saldo é sempre calculado. Ao confirmar um pedido, os ingredientes são baixados pela ficha técnica na mesma transação (`@Transactional`); sem estoque, a API responde 422 dizendo o que falta (RN03). Cancelar estorna o que foi baixado.
 - Fornecedor com CNPJ validado pelo algoritmo dos dígitos verificadores, inclusive o CNPJ alfanumérico (RN07). Cada fornecedor tem um catálogo com preço por unidade do ingrediente; a cotação compara os fornecedores do mais barato para o mais caro. Pedido de compra RASCUNHO → ENVIADO → RECEBIDO: o recebimento dá entrada no estoque e atualiza o custo unitário do ingrediente (RN05), o que recalcula o food cost dos pratos. Todo preço fica no histórico, com gráfico de evolução.
+- Dashboard: faturamento, pedidos, ticket médio e food cost médio do dia (comparando com o dia anterior), top 5 pratos em barras e faturamento diário em linha (Chart.js) com período selecionável, e os ingredientes em estoque crítico. Conta como venda o pedido confirmado (o mesmo momento em que o estoque é baixado).
 - Listagens do painel com paginação (`Pageable`) e filtros por status, canal e período.
 - Erros tratados em um `@RestControllerAdvice` (respostas padronizadas, sem stack trace para o cliente).
 - Segredos (senha do banco, chave JWT) apenas em variáveis de ambiente.

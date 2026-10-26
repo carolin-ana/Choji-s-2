@@ -141,3 +141,16 @@ export interface FiltroCompras { status: StatusCompra | ''; fornecedorId: number
 export interface CustoAlterado { ingredienteId: number; ingrediente: string; unidade: UnidadeMedida; custoAnterior: number; custoNovo: number; }
 export interface PratoAfetado { pratoId: number; prato: string; foodCost: number; faixa: FaixaFoodCost; }
 export interface Recebimento { compra: Compra; custos: CustoAlterado[]; pratos: PratoAfetado[]; }
+
+// ---- Dashboard (bloco 9) ----
+// Mesmo formato dos DTOs do back. foodCostMedio = null quando não houve venda.
+export interface Resumo {
+  data: string; faturamento: number; pedidos: number; ticketMedio: number; foodCostMedio: number | null; faixaFoodCost: FaixaFoodCost | null;
+  faturamentoDiaAnterior: number; pedidosDiaAnterior: number; pedidosAguardando: number; pedidosCancelados: number;
+}
+export interface TopPrato { pratoId: number; prato: string; categoria: string; quantidade: number; faturamento: number; percentualQuantidade: number; }
+export interface VendaDia { data: string; pedidos: number; faturamento: number; ticketMedio: number; }
+export interface Vendas {
+  inicio: string; fim: string; faturamento: number; pedidos: number; ticketMedio: number; foodCostMedio: number | null;
+  faixaFoodCost: FaixaFoodCost | null; dias: VendaDia[];
+}
