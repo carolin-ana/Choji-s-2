@@ -93,7 +93,9 @@ comanda-digital/    Front-end Angular
 
 As tabelas são criadas pelo **Flyway** ao iniciar o back (`comanda-api/src/main/resources/db/migration`). O seed cria o usuário admin, os usuários de exemplo, as categorias e os pratos do cardápio. O Hibernate não altera o banco (`ddl-auto=none`).
 
-O diagrama entidade-relacionamento (DER) está em `docs/der.png` *(a adicionar)*.
+O diagrama entidade-relacionamento (DER) está em [`docs/der.png`](docs/der.png): são 15 tabelas, agrupadas por parte do sistema (clientes e pedidos, cardápio e ficha técnica, estoque, fornecedores e compras).
+
+![DER](docs/der.png)
 
 ## Como rodar localmente
 
