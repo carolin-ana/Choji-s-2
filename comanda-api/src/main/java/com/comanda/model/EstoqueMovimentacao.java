@@ -16,7 +16,7 @@ public class EstoqueMovimentacao {
     private String lote;
     private LocalDate validade;
     private BigDecimal custoUnitario;
-    private Long pedidoCompraId;                   // vira relação com pedido_compra no bloco 7
+    private Long pedidoCompraId;                   // preenchido na entrada de COMPRA (chave estrangeira criada na V7)
     @ManyToOne(fetch = FetchType.LAZY) private Pedido pedido;     // preenchido na baixa (VENDA) e no ESTORNO
     @ManyToOne(fetch = FetchType.LAZY) private Usuario usuario;   // quem fez
     private String observacao;

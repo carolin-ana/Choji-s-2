@@ -1,6 +1,7 @@
 package com.comanda.dto;
 
 import com.comanda.model.*;
+import com.comanda.validation.CnpjValido;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import java.math.BigDecimal;
@@ -99,4 +100,51 @@ public final class Dtos {
                                        TipoMovimentacao tipo, MotivoMovimentacao motivo, BigDecimal quantidade, String lote,
                                        java.time.LocalDate validade, BigDecimal custoUnitario, Long pedidoId, Long pedidoCompraId,
                                        String usuario, String observacao) {}
+
+    // ---- Fornecedores e compras (bloco 7) ----
+    // RN07: o CNPJ pode vir com ou sem pontuação; o Service guarda só os 14 caracteres
+    public record FornecedorRequest(@NotBlank @Size(max = 150) String razaoSocial, @NotBlank @CnpjValido String cnpj,
+                                    @Size(max = 30) String telefone, @Email @Size(max = 160) String email,
+                                    @Size(max = 255) String categorias) {}
+    public record FornecedorResponse(Long id, String razaoSocial, String cnpj, String cnpjFormatado, String telefone, String email,
+                                     String categorias, StatusRegistro status, long itensCatalogo) {}
+    // RF-022: preço por unidade padrão do ingrediente (por g, ml, un...); unidadeVenda descreve a embalagem
+    public record CatalogoItemRequest(@NotNull Long ingredienteId,
+                                      @NotNull @DecimalMin(value = "0.0001", message = "o preço precisa ser maior que zero")
+                                      @Digits(integer = 6, fraction = 4) BigDecimal preco,
+                                      @Size(max = 60) String unidadeVenda) {}
+    public record CatalogoPrecoRequest(@NotNull @DecimalMin(value = "0.0001", message = "o preço precisa ser maior que zero")
+                                       @Digits(integer = 6, fraction = 4) BigDecimal preco,
+                                       @Size(max = 60) String unidadeVenda) {}
+    public record CatalogoItemResponse(Long id, Long ingredienteId, String ingrediente, String sku, UnidadeMedida unidade,
+                                       BigDecimal preco, String unidadeVenda, BigDecimal custoAtual, StatusRegistro status,
+                                       LocalDateTime updatedAt) {}
+    // RF-023: diferencaPercentual = quanto este preço está acima do mais barato (0 para o mais barato)
+    public record CotacaoItemResponse(Long fornecedorId, String fornecedor, String telefone, String email, BigDecimal preco,
+                                      String unidadeVenda, BigDecimal diferencaPercentual, boolean maisBarato, LocalDateTime atualizadoEm) {}
+    public record CotacaoResponse(Long ingredienteId, String ingrediente, String sku, UnidadeMedida unidade, BigDecimal custoAtual,
+                                  BigDecimal saldo, BigDecimal estoqueMinimo, boolean abaixoMinimo, List<CotacaoItemResponse> fornecedores) {}
+    // RF-026
+    public record PrecoHistoricoResponse(Long fornecedorId, String fornecedor, BigDecimal preco, OrigemPreco origem,
+                                         Long pedidoCompraId, LocalDateTime data) {}
+    // RF-024: precoUnitario vazio = usa o preço do catálogo do fornecedor
+    public record CompraItemRequest(@NotNull Long ingredienteId,
+                                    @NotNull @DecimalMin(value = "0.001", message = "a quantidade precisa ser maior que zero")
+                                    @Digits(integer = 9, fraction = 3) BigDecimal quantidade,
+                                    @DecimalMin(value = "0.0001", message = "o preço precisa ser maior que zero")
+                                    @Digits(integer = 6, fraction = 4) BigDecimal precoUnitario) {}
+    public record CompraRequest(@NotNull Long fornecedorId, @Size(max = 500) String observacoes,
+                                @NotEmpty(message = "o pedido precisa de pelo menos 1 item") @Valid List<CompraItemRequest> itens) {}
+    public record CompraItemResponse(Long ingredienteId, String ingrediente, UnidadeMedida unidade, BigDecimal quantidade,
+                                     BigDecimal precoUnitario, BigDecimal subtotal) {}
+    public record CompraResponse(Long id, StatusCompra status, Long fornecedorId, String fornecedor, BigDecimal valorTotal,
+                                 String observacoes, String motivoCancelamento, String usuario, LocalDateTime createdAt,
+                                 LocalDateTime enviadoEm, LocalDateTime recebidoEm, List<CompraItemResponse> itens) {}
+    // RF-025: lote e validade valem para todos os itens recebidos (todos opcionais)
+    public record ReceberRequest(@Size(max = 60) String lote, java.time.LocalDate validade, @Size(max = 255) String observacao) {}
+    public record CustoAlteradoResponse(Long ingredienteId, String ingrediente, UnidadeMedida unidade,
+                                        BigDecimal custoAnterior, BigDecimal custoNovo) {}
+    public record PratoAfetadoResponse(Long pratoId, String prato, BigDecimal foodCost, FaixaFoodCost faixa) {}
+    // O que mudou com o recebimento: custos novos (RN05) e o food cost recalculado dos pratos que usam esses ingredientes
+    public record RecebimentoResponse(CompraResponse compra, List<CustoAlteradoResponse> custos, List<PratoAfetadoResponse> pratos) {}
 }

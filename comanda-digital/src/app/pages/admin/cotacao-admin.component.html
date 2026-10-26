@@ -1,0 +1,92 @@
+<div class="painel-titulo">
+  <h1>Cotação</h1>
+  <div class="titulo-acoes"><span class="dica">Compare o preço de um ingrediente em todos os fornecedores</span></div>
+</div>
+
+<div class="filtros-admin">
+  <label>Ingrediente
+    <select [formControl]="escolhido" aria-label="Ingrediente para cotar">
+      <option [ngValue]="null">Escolha um ingrediente...</option>
+      @for (i of ingredientes(); track i.id) { <option [ngValue]="i.id">{{ i.nome }} ({{ i.sku }})</option> }
+    </select>
+  </label>
+</div>
+
+@if (erro()) { <p class="erro">{{ erro() }}</p> }
+
+@if (carregando()) {
+  <p class="vazio">Buscando os preços...</p>
+} @else if (cotacao(); as c) {
+  <section class="resumo-cotacao">
+    <div><span>Custo atual</span><strong>{{ c.custoAtual | currency:'BRL':'symbol':'1.4-4' }} / {{ rotulosUnidade[c.unidade] }}</strong></div>
+    <div><span>Saldo em estoque</span><strong [class.saldo-baixo]="c.abaixoMinimo">{{ c.saldo | number:'1.0-3' }} {{ rotulosUnidade[c.unidade] }}</strong></div>
+    <div><span>Estoque mínimo</span><strong>{{ c.estoqueMinimo | number:'1.0-3' }} {{ rotulosUnidade[c.unidade] }}</strong></div>
+    <div>
+      <span>Situação</span>
+      @if (c.abaixoMinimo) { <span class="badge st-BAIXO">Abaixo do mínimo</span> } @else { <span class="badge st-OK">Ok</span> }
+    </div>
+  </section>
+
+  @if (c.fornecedores.length) {
+    <div class="tabela-rolagem">
+      <table class="tabela">
+        <thead><tr><th>Fornecedor</th><th class="num">Preço</th><th>Embalagem</th><th class="num">Diferença</th><th class="num">vs. custo atual</th><th>Contato</th><th class="num"></th></tr></thead>
+        <tbody>
+          @for (f of c.fornecedores; track f.fornecedorId) {
+            <tr [class.mais-barato]="f.maisBarato">
+              <td class="celula-prato"><strong>{{ f.fornecedor }}</strong><small>Preço de {{ f.atualizadoEm | date:'dd/MM/yyyy' }}</small></td>
+              <td class="num"><strong>{{ f.preco | currency:'BRL':'symbol':'1.4-4' }}</strong> / {{ rotulosUnidade[c.unidade] }}</td>
+              <td>{{ f.unidadeVenda || '—' }}</td>
+              <td class="num">
+                @if (f.maisBarato) { <span class="badge st-OK">Mais barato</span> }
+                @else { +{{ f.diferencaPercentual | number:'1.1-1' }}% }
+              </td>
+              <td class="num">
+                @if (vsCusto(c, f.preco); as d) {
+                  <span [class]="d < 0 ? 'qtd-mais' : 'qtd-menos'">{{ d > 0 ? '+' : '' }}{{ d | number:'1.1-1' }}%</span>
+                } @else { igual }
+              </td>
+              <td class="celula-prato">{{ f.telefone || '—' }}@if (f.email) { <small>{{ f.email }}</small> }</td>
+              <td class="num">
+                <a class="btn-sec" routerLink="/admin/compras/novo" [queryParams]="{ fornecedorId: f.fornecedorId, ingredienteId: c.ingredienteId }">Comprar</a>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  } @else {
+    <p class="vazio">Nenhum fornecedor ativo vende {{ c.ingrediente }}. Coloque-o no catálogo de um fornecedor em <a routerLink="/admin/fornecedores">Fornecedores</a>.</p>
+  }
+
+  <section class="cartao historico-precos">
+    <div class="painel-titulo">
+      <h2>Evolução do preço · {{ c.ingrediente }}</h2>
+      @if (historico().length) {
+        <button type="button" class="btn-sec" (click)="verTabela.set(!verTabela())">{{ verTabela() ? 'Ver gráfico' : 'Ver em tabela' }}</button>
+      }
+    </div>
+    @if (verTabela()) {
+      <div class="tabela-rolagem">
+        <table class="tabela">
+          <thead><tr><th>Data</th><th>Fornecedor</th><th class="num">Preço</th><th>Origem</th></tr></thead>
+          <tbody>
+            @for (h of historicoRecente(); track $index) {
+              <tr>
+                <td>{{ h.data | date:'dd/MM/yyyy HH:mm' }}</td>
+                <td>{{ h.fornecedor }}</td>
+                <td class="num">{{ h.preco | currency:'BRL':'symbol':'1.4-4' }} / {{ rotulosUnidade[c.unidade] }}</td>
+                <td>{{ rotulosOrigem[h.origem] }}@if (h.pedidoCompraId) { · <a [routerLink]="['/admin/compras', h.pedidoCompraId]">Compra #{{ h.pedidoCompraId }}</a> }</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    } @else {
+      <app-grafico-precos [historico]="historico()" [unidade]="rotulosUnidade[c.unidade]" />
+      <p class="dica">Preço por {{ rotulosUnidade[c.unidade] }}. Cada ponto é uma mudança no catálogo ou uma compra recebida; o preço vale até a mudança seguinte. Passe o mouse para ver os valores de cada dia.</p>
+    }
+  </section>
+} @else if (!escolhido.value) {
+  <p class="vazio">Escolha um ingrediente para ver os fornecedores que o vendem e o histórico de preços.</p>
+}

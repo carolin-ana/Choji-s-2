@@ -41,7 +41,7 @@
               <td>{{ m.lote || '—' }}@if (m.validade) { <small style="display:block">até {{ m.validade | date:'dd/MM/yyyy' }}</small> }</td>
               <td>
                 @if (m.pedidoId) { Pedido #{{ m.pedidoId }} }
-                @else if (m.pedidoCompraId) { Compra #{{ m.pedidoCompraId }} }
+                @else if (m.pedidoCompraId) { <a [routerLink]="['/admin/compras', m.pedidoCompraId]">Compra #{{ m.pedidoCompraId }}</a> }
                 @else { Manual }
               </td>
               <td>{{ m.usuario || '—' }}</td>

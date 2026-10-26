@@ -1,0 +1,178 @@
+<div class="painel-titulo">
+  <h1>Fornecedores</h1>
+  <div class="titulo-acoes">
+    <span class="dica">Cada fornecedor tem um catálogo com os ingredientes que vende</span>
+    <button type="button" class="btn" (click)="abrirNovo()">+ Novo fornecedor</button>
+  </div>
+</div>
+
+<form class="filtros-admin" [formGroup]="filtros">
+  <label>Buscar <input type="search" formControlName="busca" placeholder="Razão social, CNPJ ou categoria" /></label>
+  <label>Situação
+    <select formControlName="status">
+      <option value="">Todos</option>
+      <option value="ATIVO">Ativo</option>
+      <option value="INATIVO">Inativo</option>
+    </select>
+  </label>
+  <button type="button" class="btn-sec" (click)="limpar()" [disabled]="!temFiltro()">Limpar filtros</button>
+</form>
+
+@if (erroLista()) { <p class="erro">Não foi possível carregar os fornecedores. Confira se o servidor está no ar.</p> }
+
+@if (pagina(); as pg) {
+  @if (pg.content.length) {
+    <div class="tabela-rolagem">
+      <table class="tabela">
+        <thead><tr><th>Fornecedor</th><th>CNPJ</th><th>Contato</th><th class="num">Catálogo</th><th>Situação</th><th class="num">Ações</th></tr></thead>
+        <tbody>
+          @for (f of pg.content; track f.id) {
+            <tr [class.inativo]="f.status === 'INATIVO'">
+              <td class="celula-prato"><strong>{{ f.razaoSocial }}</strong>@if (f.categorias) { <small>{{ f.categorias }}</small> }</td>
+              <td class="cnpj">{{ f.cnpjFormatado }}</td>
+              <td class="celula-prato">{{ f.telefone || '—' }}@if (f.email) { <small>{{ f.email }}</small> }</td>
+              <td class="num">{{ f.itensCatalogo }} {{ f.itensCatalogo === 1 ? 'item' : 'itens' }}</td>
+              <td><span [class]="'badge st-' + f.status">{{ f.status === 'ATIVO' ? 'Ativo' : 'Inativo' }}</span></td>
+              <td class="num">
+                <div class="acoes">
+                  <button type="button" class="btn-sec" (click)="abrirCatalogo(f)">Catálogo</button>
+                  <button type="button" class="btn-sec" (click)="abrirEdicao(f)">Editar</button>
+                  @if (f.status === 'ATIVO') {
+                    <button type="button" class="btn-sec perigo" (click)="desativando.set(f)" [disabled]="ocupado() === f.id">Desativar</button>
+                  } @else {
+                    <button type="button" class="btn-sec" (click)="reativar(f)" [disabled]="ocupado() === f.id">Reativar</button>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  } @else {
+    <p class="vazio">@if (temFiltro()) { Nenhum fornecedor com estes filtros. } @else { Nenhum fornecedor cadastrado. }</p>
+  }
+  @if (pg.totalPages > 1) {
+    <nav class="paginacao" aria-label="Paginação">
+      <button type="button" class="btn-sec" (click)="irPara(pg.page - 1)" [disabled]="pg.page === 0">← Anterior</button>
+      <span>Página {{ pg.page + 1 }} de {{ pg.totalPages }} · {{ pg.totalElements }} fornecedores</span>
+      <button type="button" class="btn-sec" (click)="irPara(pg.page + 1)" [disabled]="pg.page + 1 >= pg.totalPages">Próxima →</button>
+    </nav>
+  }
+} @else if (carregando()) { <p class="vazio">Carregando fornecedores...</p> }
+
+<!-- Criar / editar fornecedor -->
+@if (formAberto()) {
+  <div class="janela-fundo" (click)="formAberto.set(false)">
+    <section class="janela estreita" role="dialog" aria-modal="true" aria-label="Fornecedor" (click)="$event.stopPropagation()">
+      <header><h2>{{ editando() ? 'Editar fornecedor' : 'Novo fornecedor' }}</h2></header>
+      <form class="form-janela" [formGroup]="form" (ngSubmit)="salvar()">
+        <label>Razão social <input formControlName="razaoSocial" autocomplete="off" [class.invalido]="invalido('razaoSocial')" /></label>
+        @if (invalido('razaoSocial')) { <span class="erro">Informe a razão social.</span> }
+        <label>CNPJ <input formControlName="cnpj" autocomplete="off" placeholder="00.000.000/0000-00" maxlength="18" [class.invalido]="invalido('cnpj')" /></label>
+        @if (invalido('cnpj')) {
+          <span class="erro">@if (form.controls.cnpj.hasError('required')) { Informe o CNPJ. } @else { CNPJ inválido: confira os dígitos. }</span>
+        }
+        <small>Aceita também o CNPJ alfanumérico (com letras nas 12 primeiras posições).</small>
+        <div class="duas-colunas">
+          <label>Telefone <input formControlName="telefone" autocomplete="off" placeholder="Opcional" /></label>
+          <label>E-mail <input type="email" formControlName="email" autocomplete="off" placeholder="Opcional" [class.invalido]="invalido('email')" /></label>
+        </div>
+        @if (invalido('email')) { <span class="erro">Informe um e-mail válido.</span> }
+        <label>Categorias de produtos <input formControlName="categorias" autocomplete="off" placeholder="Ex.: Pescados, carnes" /></label>
+        @if (erroForm()) { <p class="erro">{{ erroForm() }}</p> }
+        <footer>
+          <button type="button" class="btn-sec" (click)="formAberto.set(false)">Cancelar</button>
+          <button type="submit" class="btn" [disabled]="salvando()">{{ salvando() ? 'Salvando...' : 'Salvar' }}</button>
+        </footer>
+      </form>
+    </section>
+  </div>
+}
+
+<!-- Desativar (RN06) -->
+@if (desativando(); as f) {
+  <div class="janela-fundo" (click)="desativando.set(null)">
+    <section class="janela estreita" role="dialog" aria-modal="true" aria-label="Desativar fornecedor" (click)="$event.stopPropagation()">
+      <header><h2>Desativar {{ f.razaoSocial }}?</h2></header>
+      <p>Ele sai da cotação e não pode receber pedidos de compra novos. O catálogo, os pedidos antigos e o histórico de preços continuam guardados.</p>
+      <footer>
+        <button type="button" class="btn-sec" (click)="desativando.set(null)">Voltar</button>
+        <button type="button" class="btn" (click)="confirmarDesativacao()" [disabled]="ocupado() === f.id">Desativar</button>
+      </footer>
+    </section>
+  </div>
+}
+
+<!-- Catálogo do fornecedor (RF-022) -->
+@if (catalogoDe(); as f) {
+  <div class="janela-fundo" (click)="fecharCatalogo()">
+    <section class="janela larga" role="dialog" aria-modal="true" aria-label="Catálogo do fornecedor" (click)="$event.stopPropagation()">
+      <header>
+        <h2>Catálogo · {{ f.razaoSocial }}</h2>
+        <button type="button" class="btn-icone fechar" (click)="fecharCatalogo()" aria-label="Fechar">×</button>
+      </header>
+      <p class="dica">O preço é sempre por unidade do ingrediente (por g, ml ou un), igual ao custo unitário, para a cotação comparar os fornecedores.</p>
+
+      <form class="form-janela item-catalogo" [formGroup]="itemForm" (ngSubmit)="salvarItem()">
+        <h3>{{ editandoItem() ? 'Editar ' + editandoItem()!.ingrediente : 'Adicionar ingrediente' }}</h3>
+        <div class="linha-campos">
+          @if (!editandoItem()) {
+            <label class="cresce">Ingrediente
+              <select formControlName="ingredienteId">
+                <option [ngValue]="null" disabled>Escolha...</option>
+                @for (i of disponiveis(); track i.id) { <option [ngValue]="i.id">{{ i.nome }} ({{ rotulosUnidade[i.unidadePadrao] }})</option> }
+              </select>
+            </label>
+          }
+          <label>Preço por {{ unidadeEscolhida() }} (R$)
+            <input type="number" min="0.0001" step="0.0001" formControlName="preco" />
+          </label>
+          <label class="cresce">Embalagem <input formControlName="unidadeVenda" placeholder="Ex.: pacote de 1 kg" /></label>
+        </div>
+        <small>Ex.: pacote de 1 kg a R$ 30,00 = R$ 0,0300 por g.</small>
+        @if (itemForm.touched && itemForm.invalid) { <span class="erro">Escolha o ingrediente e informe um preço maior que zero.</span> }
+        @if (erroItem()) { <p class="erro">{{ erroItem() }}</p> }
+        <div class="barra-acoes">
+          @if (editandoItem()) { <button type="button" class="btn-sec" (click)="novoItem()">Cancelar edição</button> }
+          <button type="submit" class="btn" [disabled]="salvandoItem()">{{ salvandoItem() ? 'Salvando...' : (editandoItem() ? 'Salvar preço' : 'Adicionar') }}</button>
+        </div>
+      </form>
+
+      @if (carregandoCatalogo() && !itens().length) {
+        <p class="vazio">Carregando catálogo...</p>
+      } @else if (itens().length) {
+        <div class="tabela-rolagem">
+          <table class="tabela">
+            <thead><tr><th>Ingrediente</th><th class="num">Preço</th><th>Embalagem</th><th class="num">Custo atual</th><th class="num">Atualizado</th><th class="num">Ações</th></tr></thead>
+            <tbody>
+              @for (i of itens(); track i.id) {
+                <tr [class.editando]="editandoItem()?.id === i.id">
+                  <td class="celula-prato"><strong>{{ i.ingrediente }}</strong><small>{{ i.sku }}</small></td>
+                  <td class="num">{{ i.preco | currency:'BRL':'symbol':'1.4-4' }} / {{ rotulosUnidade[i.unidade] }}</td>
+                  <td>{{ i.unidadeVenda || '—' }}</td>
+                  <td class="num">
+                    {{ i.custoAtual | currency:'BRL':'symbol':'1.4-4' }}
+                    @if (diferenca(i); as d) {
+                      <small [class]="d < 0 ? 'qtd-mais' : 'qtd-menos'">{{ d > 0 ? '+' : '' }}{{ d.toFixed(1).replace('.', ',') }}%</small>
+                    }
+                  </td>
+                  <td class="num">{{ i.updatedAt | date:'dd/MM/yy' }}</td>
+                  <td class="num">
+                    <div class="acoes">
+                      <a class="btn-sec" routerLink="/admin/cotacao" [queryParams]="{ ingredienteId: i.ingredienteId }" (click)="fecharCatalogo()">Cotação</a>
+                      <button type="button" class="btn-sec" (click)="editarItem(i)">Editar</button>
+                      <button type="button" class="btn-sec perigo" (click)="removerItem(i)">Remover</button>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <p class="vazio">Este fornecedor ainda não tem ingredientes no catálogo.</p>
+      }
+    </section>
+  </div>
+}

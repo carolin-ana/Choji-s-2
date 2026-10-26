@@ -14,6 +14,10 @@ import { CategoriasAdminComponent } from './pages/admin/categorias-admin.compone
 import { IngredientesAdminComponent } from './pages/admin/ingredientes-admin.component';
 import { EstoqueAdminComponent } from './pages/admin/estoque-admin.component';
 import { MovimentacoesAdminComponent } from './pages/admin/movimentacoes-admin.component';
+import { FornecedoresAdminComponent } from './pages/admin/fornecedores-admin.component';
+import { CotacaoAdminComponent } from './pages/admin/cotacao-admin.component';
+import { ComprasAdminComponent } from './pages/admin/compras-admin.component';
+import { CompraFormComponent } from './pages/admin/compra-form.component';
 
 export const routes: Routes = [
   { path: '', component: CardapioComponent },
@@ -42,6 +46,12 @@ export const routes: Routes = [
       // Blocos 6 e 8: estoque (ADMIN e GERENTE)
       { path: 'estoque', component: EstoqueAdminComponent, canActivate: [roleGuard('ADMIN', 'GERENTE')] },
       { path: 'estoque/movimentacoes', component: MovimentacoesAdminComponent, canActivate: [roleGuard('ADMIN', 'GERENTE')] },
+      // Bloco 7: fornecedores, cotação e compras (ADMIN e GERENTE; o cozinheiro não acessa fornecedores, RF-043)
+      { path: 'fornecedores', component: FornecedoresAdminComponent, canActivate: [roleGuard('ADMIN', 'GERENTE')] },
+      { path: 'cotacao', component: CotacaoAdminComponent, canActivate: [roleGuard('ADMIN', 'GERENTE')] },
+      { path: 'compras', component: ComprasAdminComponent, canActivate: [roleGuard('ADMIN', 'GERENTE')] },
+      { path: 'compras/novo', component: CompraFormComponent, canActivate: [roleGuard('ADMIN', 'GERENTE')] },
+      { path: 'compras/:id', component: CompraFormComponent, canActivate: [roleGuard('ADMIN', 'GERENTE')] },
     ],
   },
   { path: '**', redirectTo: '' },

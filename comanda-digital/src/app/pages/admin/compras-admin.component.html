@@ -1,0 +1,60 @@
+<div class="painel-titulo">
+  <h1>Compras</h1>
+  <div class="titulo-acoes">
+    <span class="dica">Rascunho → Enviado → Recebido (entra no estoque)</span>
+    <a class="btn-sec" routerLink="/admin/cotacao">Fazer cotação</a>
+    <a class="btn" routerLink="/admin/compras/novo">+ Novo pedido de compra</a>
+  </div>
+</div>
+
+<form class="filtros-admin" [formGroup]="filtros">
+  <label>Situação
+    <select formControlName="status">
+      <option value="">Todas</option>
+      @for (s of statusOpcoes; track s) { <option [value]="s">{{ rotulos[s] }}</option> }
+    </select>
+  </label>
+  <label>Fornecedor
+    <select formControlName="fornecedorId">
+      <option [ngValue]="null">Todos</option>
+      @for (f of fornecedores(); track f.id) { <option [ngValue]="f.id">{{ f.razaoSocial }}</option> }
+    </select>
+  </label>
+  <button type="button" class="btn-sec" (click)="limpar()" [disabled]="!temFiltro()">Limpar filtros</button>
+</form>
+
+@if (erroLista()) { <p class="erro">Não foi possível carregar os pedidos de compra. Confira se o servidor está no ar.</p> }
+
+@if (pagina(); as pg) {
+  @if (pg.content.length) {
+    <div class="tabela-rolagem">
+      <table class="tabela">
+        <thead><tr><th>Nº</th><th>Fornecedor</th><th>Itens</th><th>Criado em</th><th class="num">Total</th><th>Situação</th><th class="num"></th></tr></thead>
+        <tbody>
+          @for (c of pg.content; track c.id) {
+            <tr [class.inativo]="c.status === 'CANCELADO'">
+              <td>#{{ c.id }}</td>
+              <td>{{ c.fornecedor }}</td>
+              <td>{{ resumoItens(c) }}</td>
+              <td class="celula-prato">{{ c.createdAt | date:'dd/MM/yyyy HH:mm' }}@if (c.usuario) { <small>por {{ c.usuario }}</small> }</td>
+              <td class="num">{{ c.valorTotal | currency:'BRL' }}</td>
+              <td><span [class]="'badge cp-' + c.status">{{ rotulos[c.status] }}</span></td>
+              <td class="num">
+                <a class="btn-sec" [routerLink]="['/admin/compras', c.id]">{{ c.status === 'RASCUNHO' ? 'Editar' : (c.status === 'ENVIADO' ? 'Abrir / receber' : 'Ver') }}</a>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  } @else {
+    <p class="vazio">@if (temFiltro()) { Nenhum pedido de compra com estes filtros. } @else { Nenhum pedido de compra ainda. Comece por uma cotação. }</p>
+  }
+  @if (pg.totalPages > 1) {
+    <nav class="paginacao" aria-label="Paginação">
+      <button type="button" class="btn-sec" (click)="irPara(pg.page - 1)" [disabled]="pg.page === 0">← Anterior</button>
+      <span>Página {{ pg.page + 1 }} de {{ pg.totalPages }} · {{ pg.totalElements }} pedidos</span>
+      <button type="button" class="btn-sec" (click)="irPara(pg.page + 1)" [disabled]="pg.page + 1 >= pg.totalPages">Próxima →</button>
+    </nav>
+  }
+} @else if (carregando()) { <p class="vazio">Carregando pedidos de compra...</p> }

@@ -1,0 +1,199 @@
+<div class="painel-titulo">
+  <h1>
+    {{ compraId() ? 'Pedido de compra #' + compraId() : 'Novo pedido de compra' }}
+    @if (compra(); as c) { <span [class]="'badge cp-' + c.status">{{ rotulos[c.status] }}</span> }
+  </h1>
+  <a class="btn-sec" routerLink="/admin/compras">← Voltar às compras</a>
+</div>
+
+@if (carregando()) {
+  <p class="vazio">Carregando...</p>
+} @else if (erroCarga()) {
+  <p class="erro">{{ erroCarga() }}</p>
+} @else if (editavel()) {
+
+  <!-- RF-024: rascunho editável -->
+  <section class="cartao">
+    <form class="form-janela" [formGroup]="form" (ngSubmit)="salvar(false)">
+      <div class="duas-colunas">
+        <label>Fornecedor
+          <select formControlName="fornecedorId" [class.invalido]="form.controls.fornecedorId.invalid && form.controls.fornecedorId.touched">
+            <option [ngValue]="null" disabled>Escolha...</option>
+            @for (f of fornecedoresSelecionaveis(); track f.id) {
+              <option [ngValue]="f.id">{{ f.razaoSocial }}{{ f.status === 'INATIVO' ? ' (inativo)' : '' }}</option>
+            }
+          </select>
+        </label>
+        <label>Observações <input formControlName="observacoes" placeholder="Opcional (ex.: entregar até sexta)" /></label>
+      </div>
+
+      @if (form.controls.fornecedorId.value && !catalogo().length) {
+        <p class="aviso">Este fornecedor ainda não tem itens no catálogo. Cadastre os ingredientes dele em <a routerLink="/admin/fornecedores">Fornecedores</a>.</p>
+      }
+
+      <div class="tabela-rolagem">
+        <table class="tabela ficha-tabela">
+          <thead>
+            <tr><th>Ingrediente (do catálogo)</th><th class="col-num">Quantidade</th><th>Un.</th><th class="col-num">Preço unit. (R$)</th><th class="num">Subtotal</th><th class="col-acao"></th></tr>
+          </thead>
+          <tbody formArrayName="itens">
+            @for (linha of itens.controls; track linha; let i = $index) {
+              <tr [formGroupName]="i">
+                <td>
+                  <select formControlName="ingredienteId" [class.invalido]="invalida(linha, 'ingredienteId')" [attr.aria-label]="'Ingrediente da linha ' + (i + 1)">
+                    <option [ngValue]="null" disabled>{{ catalogo().length ? 'Escolha...' : 'Escolha o fornecedor antes' }}</option>
+                    @for (c of catalogo(); track c.id) {
+                      <option [ngValue]="c.ingredienteId" [disabled]="usadoEmOutraLinha(c.ingredienteId, linha)">{{ c.ingrediente }}{{ c.unidadeVenda ? ' · ' + c.unidadeVenda : '' }}</option>
+                    }
+                  </select>
+                </td>
+                <td>
+                  <input type="number" min="0.001" step="any" formControlName="quantidade" [class.invalido]="invalida(linha, 'quantidade')" [attr.aria-label]="'Quantidade da linha ' + (i + 1)" />
+                  @if (itemDa(linha); as it) { <small class="conversao">{{ conversao(linha.controls.quantidade.value, it.unidade) }}</small> }
+                </td>
+                <td>{{ itemDa(linha) ? rotulosUnidade[itemDa(linha)!.unidade] : '—' }}</td>
+                <td>
+                  <input type="number" min="0.0001" step="0.0001" formControlName="precoUnitario" [class.invalido]="invalida(linha, 'precoUnitario')" [attr.aria-label]="'Preço unitário da linha ' + (i + 1)" />
+                  @if (itemDa(linha); as it) {
+                    @if (linha.controls.precoUnitario.value !== it.preco) { <small class="conversao">catálogo: {{ it.preco | currency:'BRL':'symbol':'1.4-4' }}</small> }
+                  }
+                </td>
+                <td class="num">{{ subtotal(linha) | currency:'BRL' }}</td>
+                <td class="col-acao">
+                  <button type="button" class="btn-icone" (click)="removerLinha(i)" [disabled]="itens.length === 1" [attr.aria-label]="'Remover linha ' + (i + 1)" title="Remover">×</button>
+                </td>
+              </tr>
+            }
+          </tbody>
+          <tfoot><tr><td colspan="4">Total</td><td class="num">{{ total() | currency:'BRL' }}</td><td></td></tr></tfoot>
+        </table>
+      </div>
+      <div><button type="button" class="btn-sec" (click)="adicionarLinha()" [disabled]="!catalogo().length">+ Adicionar item</button></div>
+      <small>Quantidade e preço na unidade do ingrediente (g, ml ou un). O preço vem do catálogo do fornecedor e pode ser ajustado se foi negociado. O total oficial é calculado pelo servidor ao salvar.</small>
+
+      @if (erroForm()) { <p class="erro">{{ erroForm() }}</p> }
+      <div class="barra-acoes">
+        @if (compra()) { <button type="button" class="btn-sec perigo" (click)="abrirCancelamento()">Cancelar rascunho</button> }
+        <button type="submit" class="btn-sec" [disabled]="salvando()">{{ salvando() ? 'Salvando...' : 'Salvar rascunho' }}</button>
+        <button type="button" class="btn" (click)="salvar(true)" [disabled]="salvando()">Salvar e enviar ao fornecedor</button>
+      </div>
+    </form>
+  </section>
+
+} @else if (compra(); as c) {
+
+  <!-- Enviado, recebido ou cancelado: só leitura -->
+  <div class="prato-layout">
+    <section class="cartao">
+      <h2>{{ c.fornecedor }}</h2>
+      <div class="tabela-rolagem">
+        <table class="tabela">
+          <thead><tr><th>Ingrediente</th><th class="num">Quantidade</th><th class="num">Preço unit.</th><th class="num">Subtotal</th></tr></thead>
+          <tbody>
+            @for (i of c.itens; track i.ingredienteId) {
+              <tr>
+                <td>{{ i.ingrediente }}</td>
+                <td class="num">{{ i.quantidade | number:'1.0-3' }} {{ rotulosUnidade[i.unidade] }} <small class="conversao">{{ conversao(i.quantidade, i.unidade) }}</small></td>
+                <td class="num">{{ i.precoUnitario | currency:'BRL':'symbol':'1.4-4' }} / {{ rotulosUnidade[i.unidade] }}</td>
+                <td class="num">{{ i.subtotal | currency:'BRL' }}</td>
+              </tr>
+            }
+          </tbody>
+          <tfoot><tr><td colspan="3">Total</td><td class="num">{{ c.valorTotal | currency:'BRL' }}</td></tr></tfoot>
+        </table>
+      </div>
+      @if (c.observacoes) { <p><strong>Observações:</strong> {{ c.observacoes }}</p> }
+      @if (c.motivoCancelamento) { <p class="motivo">Motivo do cancelamento: {{ c.motivoCancelamento }}</p> }
+      @if (c.status === 'ENVIADO') {
+        <div class="barra-acoes">
+          <button type="button" class="btn-sec perigo" (click)="abrirCancelamento()">Cancelar pedido</button>
+          <button type="button" class="btn" (click)="abrirRecebimento()">Registrar recebimento</button>
+        </div>
+      }
+    </section>
+
+    <aside class="cartao">
+      <h2>Andamento</h2>
+      <ol class="timeline">
+        <li class="feita">Rascunho criado<small>{{ c.createdAt | date:'dd/MM/yyyy HH:mm' }}{{ c.usuario ? ' · ' + c.usuario : '' }}</small></li>
+        <li [class.feita]="!!c.enviadoEm">Enviado ao fornecedor@if (c.enviadoEm) { <small>{{ c.enviadoEm | date:'dd/MM/yyyy HH:mm' }}</small> }</li>
+        @if (c.status === 'CANCELADO') {
+          <li class="feita atual">Cancelado</li>
+        } @else {
+          <li [class.feita]="!!c.recebidoEm" [class.atual]="!!c.recebidoEm">Recebido · entrou no estoque@if (c.recebidoEm) { <small>{{ c.recebidoEm | date:'dd/MM/yyyy HH:mm' }}</small> }</li>
+        }
+      </ol>
+      @if (c.status === 'RECEBIDO') {
+        <a class="btn-sec" routerLink="/admin/estoque/movimentacoes">Ver movimentações do estoque</a>
+      }
+    </aside>
+
+    <!-- RF-025 / RN05: o que mudou com o recebimento -->
+    @if (recebimento(); as r) {
+      <section class="cartao largo resultado-recebimento" role="status">
+        <h2>Recebimento registrado</h2>
+        <p>Os itens entraram no estoque com o motivo <strong>Compra</strong> e o custo unitário de cada ingrediente passou a ser o preço desta compra.</p>
+        <div class="tabela-rolagem">
+          <table class="tabela">
+            <thead><tr><th>Ingrediente</th><th class="num">Custo anterior</th><th class="num">Custo novo</th></tr></thead>
+            <tbody>
+              @for (x of r.custos; track x.ingredienteId) {
+                <tr>
+                  <td>{{ x.ingrediente }}</td>
+                  <td class="num">{{ x.custoAnterior | currency:'BRL':'symbol':'1.4-4' }} / {{ rotulosUnidade[x.unidade] }}</td>
+                  <td class="num"><strong>{{ x.custoNovo | currency:'BRL':'symbol':'1.4-4' }}</strong> / {{ rotulosUnidade[x.unidade] }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        @if (r.pratos.length) {
+          <h3>Food cost recalculado dos pratos que usam esses ingredientes</h3>
+          <ul class="pratos-afetados">
+            @for (p of r.pratos; track p.pratoId) {
+              <li><a [routerLink]="['/admin/pratos', p.pratoId]">{{ p.prato }}</a> <span [class]="'badge fc-' + p.faixa" [title]="rotulosFaixa[p.faixa]">{{ p.foodCost | number:'1.1-1' }}%</span></li>
+            }
+          </ul>
+        }
+      </section>
+    }
+  </div>
+}
+
+<!-- Registrar recebimento (RF-025) -->
+@if (recebendo()) {
+  <div class="janela-fundo" (click)="recebendo.set(false)">
+    <section class="janela estreita" role="dialog" aria-modal="true" aria-label="Registrar recebimento" (click)="$event.stopPropagation()">
+      <header><h2>Registrar recebimento</h2></header>
+      <form class="form-janela" [formGroup]="receberForm" (ngSubmit)="confirmarRecebimento()">
+        <p class="dica">Todos os itens entram no estoque agora, e o custo de cada ingrediente passa a ser o preço deste pedido. Isso não pode ser desfeito.</p>
+        <div class="duas-colunas">
+          <label>Lote <input formControlName="lote" placeholder="Opcional" /></label>
+          <label>Validade <input type="date" formControlName="validade" /></label>
+        </div>
+        <label>Observação <input formControlName="observacao" placeholder="Opcional (ex.: nota fiscal 1234)" /></label>
+        <footer>
+          <button type="button" class="btn-sec" (click)="recebendo.set(false)">Voltar</button>
+          <button type="submit" class="btn" [disabled]="ocupado()">{{ ocupado() ? 'Registrando...' : 'Confirmar recebimento' }}</button>
+        </footer>
+      </form>
+    </section>
+  </div>
+}
+
+<!-- Cancelar -->
+@if (cancelando()) {
+  <div class="janela-fundo" (click)="cancelando.set(false)">
+    <section class="janela estreita" role="dialog" aria-modal="true" aria-label="Cancelar pedido de compra" (click)="$event.stopPropagation()">
+      <header><h2>Cancelar pedido de compra #{{ compraId() }}?</h2></header>
+      <form class="form-janela" (submit)="$event.preventDefault(); confirmarCancelamento()">
+        <label>Motivo (obrigatório) <input [formControl]="motivo" placeholder="Ex.: fornecedor sem estoque" [class.invalido]="motivo.invalid && motivo.touched" /></label>
+        @if (motivo.invalid && motivo.touched) { <span class="erro">Informe o motivo.</span> }
+        <footer>
+          <button type="button" class="btn-sec" (click)="cancelando.set(false)">Voltar</button>
+          <button type="submit" class="btn" [disabled]="ocupado()">{{ ocupado() ? 'Cancelando...' : 'Cancelar pedido' }}</button>
+        </footer>
+      </form>
+    </section>
+  </div>
+}

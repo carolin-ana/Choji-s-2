@@ -96,3 +96,48 @@ export interface MovimentacaoForm {
   lote: string; validade: string; custoUnitario: number | null; observacao: string;
 }
 export interface FiltroMovimentacoes { ingredienteId: number | null; tipo: TipoMovimentacao | ''; dataInicio: string; dataFim: string; }
+
+// ---- Fornecedores e compras (bloco 7) ----
+// cnpj = 14 caracteres sem pontuação (como está no banco); cnpjFormatado = com a máscara, para mostrar
+export interface Fornecedor {
+  id: number; razaoSocial: string; cnpj: string; cnpjFormatado: string; telefone: string | null; email: string | null;
+  categorias: string | null; status: StatusRegistro; itensCatalogo: number;
+}
+export interface FornecedorForm { razaoSocial: string; cnpj: string; telefone: string; email: string; categorias: string; }
+// RF-022: preço por unidade padrão do ingrediente (por g, ml, un...); unidadeVenda = descrição da embalagem
+export interface CatalogoItem {
+  id: number; ingredienteId: number; ingrediente: string; sku: string; unidade: UnidadeMedida; preco: number;
+  unidadeVenda: string | null; custoAtual: number; status: StatusRegistro; updatedAt: string;
+}
+export interface CatalogoForm { ingredienteId: number | null; preco: number | null; unidadeVenda: string; }
+// RF-023
+export interface CotacaoItem {
+  fornecedorId: number; fornecedor: string; telefone: string | null; email: string | null; preco: number; unidadeVenda: string | null;
+  diferencaPercentual: number; maisBarato: boolean; atualizadoEm: string;
+}
+export interface Cotacao {
+  ingredienteId: number; ingrediente: string; sku: string; unidade: UnidadeMedida; custoAtual: number; saldo: number;
+  estoqueMinimo: number; abaixoMinimo: boolean; fornecedores: CotacaoItem[];
+}
+// RF-026
+export type OrigemPreco = 'CATALOGO'|'COMPRA';
+export const ROTULOS_ORIGEM_PRECO: Record<OrigemPreco, string> = { CATALOGO: 'Catálogo', COMPRA: 'Compra recebida' };
+export interface PrecoHistorico { fornecedorId: number; fornecedor: string; preco: number; origem: OrigemPreco; pedidoCompraId: number | null; data: string; }
+// RF-024 e RF-025
+export type StatusCompra = 'RASCUNHO'|'ENVIADO'|'RECEBIDO'|'CANCELADO';
+export const STATUS_COMPRA: StatusCompra[] = ['RASCUNHO', 'ENVIADO', 'RECEBIDO', 'CANCELADO'];
+export const ROTULOS_STATUS_COMPRA: Record<StatusCompra, string> = { RASCUNHO: 'Rascunho', ENVIADO: 'Enviado', RECEBIDO: 'Recebido', CANCELADO: 'Cancelado' };
+export interface CompraItem { ingredienteId: number; ingrediente: string; unidade: UnidadeMedida; quantidade: number; precoUnitario: number; subtotal: number; }
+export interface Compra {
+  id: number; status: StatusCompra; fornecedorId: number; fornecedor: string; valorTotal: number; observacoes: string | null;
+  motivoCancelamento: string | null; usuario: string | null; createdAt: string; enviadoEm: string | null; recebidoEm: string | null;
+  itens: CompraItem[];
+}
+export interface CompraForm {
+  fornecedorId: number | null; observacoes: string;
+  itens: { ingredienteId: number | null; quantidade: number | null; precoUnitario: number | null }[];
+}
+export interface FiltroCompras { status: StatusCompra | ''; fornecedorId: number | null; }
+export interface CustoAlterado { ingredienteId: number; ingrediente: string; unidade: UnidadeMedida; custoAnterior: number; custoNovo: number; }
+export interface PratoAfetado { pratoId: number; prato: string; foodCost: number; faixa: FaixaFoodCost; }
+export interface Recebimento { compra: Compra; custos: CustoAlterado[]; pratos: PratoAfetado[]; }

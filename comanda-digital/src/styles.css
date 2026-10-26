@@ -129,7 +129,7 @@ body { margin: 0; font-family: system-ui, sans-serif; color: #222; }
 .st-PAUSADO { background: #fff3cd; color: #6b4e00; }
 .miniatura { width: 48px; height: 48px; object-fit: cover; border-radius: 6px; background: #eee; display: block; }
 .celula-prato strong { display: block; }
-.celula-prato small { color: #666; }
+.celula-prato small { color: #666; display: block; }
 .cartao { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 1rem; }
 .cartao h2 { margin: 0 0 .75rem; font-size: 1.1rem; }
 .prato-layout { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 1rem; align-items: start; }
@@ -167,3 +167,51 @@ a.btn-sec { text-decoration: none; display: inline-block; }
 .check input { min-width: 0 !important; width: auto; }
 .resumo-alerta { background: #fbdadf; color: #8a0019; border-radius: 8px; padding: .7rem .9rem; margin-bottom: 1rem; }
 .resumo-alerta button { margin-left: .5rem; }
+
+/* ---- Bloco 7: fornecedores, cotação e compras ---- */
+.cp-RASCUNHO { background: #e6e6e6; color: #444; }
+.cp-ENVIADO { background: #dbeafe; color: #1e3a8a; }
+.cp-RECEBIDO { background: #d7f0da; color: #1b5e20; }
+.cp-CANCELADO { background: #fbdadf; color: #8a0019; }
+.painel-titulo h1 .badge { vertical-align: middle; margin-left: .4rem; font-size: .85rem; }
+.cnpj { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.janela.larga { width: min(980px, 100%); }
+.janela header .fechar { font-size: 1.6rem; color: #444; }
+.item-catalogo { background: #f6f6f7; border: 1px solid #e3e3e3; border-radius: 8px; padding: .8rem; margin: .5rem 0 1rem; }
+.item-catalogo h3 { margin: 0; }
+.linha-campos { display: flex; gap: .75rem; flex-wrap: wrap; align-items: flex-end; }
+.linha-campos label { flex: 0 1 11rem; }
+.linha-campos label.cresce { flex: 1 1 14rem; }
+.tabela tr.editando td { background: #fff8e1; }
+.tabela tr.mais-barato td { background: #f1faf2; }
+.tabela td small.qtd-mais, .tabela td small.qtd-menos { display: block; }
+.resumo-cotacao { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: .75rem; margin-bottom: 1rem; }
+.resumo-cotacao > div { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: .7rem .9rem; display: grid; gap: .25rem; align-content: start; justify-items: start; }
+.resumo-cotacao span:first-child { font-size: .8rem; color: #666; }
+.resumo-cotacao strong { font-size: 1.15rem; font-variant-numeric: tabular-nums; }
+.historico-precos { margin-top: 1rem; }
+.historico-precos h2 { margin: 0 0 .5rem; }
+.grafico { display: grid; gap: .5rem; }
+.legenda { list-style: none; display: flex; flex-wrap: wrap; gap: .4rem 1.2rem; margin: 0; padding: 0; font-size: .9rem; color: #333; }
+.legenda li { display: flex; align-items: center; gap: .4rem; }
+.legenda .chave { width: 16px; height: 3px; border-radius: 2px; display: inline-block; }
+.grafico-area { position: relative; }
+.grafico-area svg { width: 100%; height: auto; display: block; touch-action: pan-y; }
+.grafico-area .grade { stroke: #ececec; stroke-width: 1; }
+.grafico-area .eixo { font-size: 13px; fill: #666; font-variant-numeric: tabular-nums; }
+.grafico-area .mira { stroke: #999; stroke-width: 1; stroke-dasharray: 3 3; }
+.dica-grafico { position: absolute; top: 8px; transform: translateX(12px); background: #fff; border: 1px solid #ddd; border-radius: 6px; padding: .45rem .6rem; box-shadow: 0 2px 8px rgba(0,0,0,.12); font-size: .82rem; display: grid; gap: .2rem; pointer-events: none; white-space: nowrap; z-index: 2; }
+.dica-grafico.a-esquerda { transform: translateX(calc(-100% - 12px)); }
+.dica-grafico .data { color: #666; }
+.linha-dica { display: flex; align-items: center; gap: .4rem; color: #444; }
+.linha-dica .traco { width: 12px; height: 3px; border-radius: 2px; display: inline-block; }
+.linha-dica strong { color: #222; font-variant-numeric: tabular-nums; }
+small.conversao { display: block; color: #666; font-size: .78rem; margin-top: .15rem; }
+.aviso { background: #fff3cd; color: #6b4e00; border-radius: 6px; padding: .6rem .75rem; margin: 0; }
+.resultado-recebimento { border-color: #9fd4a6; background: #f6fcf7; }
+.resultado-recebimento h3 { margin: 1rem 0 .4rem; font-size: .95rem; }
+.pratos-afetados { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: .5rem 1rem; }
+.pratos-afetados li { display: flex; align-items: center; gap: .4rem; }
+/* no celular o gráfico mantém uma largura mínima legível e rola de lado dentro do cartão */
+.grafico-rolagem { overflow-x: auto; }
+.grafico-rolagem .grafico-area { min-width: 720px; }

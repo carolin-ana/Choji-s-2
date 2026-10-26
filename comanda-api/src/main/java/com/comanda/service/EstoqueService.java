@@ -19,7 +19,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-// Bloco 8 (RF-028 a RF-033) e bloco 6 (RF-017, RF-018, RN03). Toda regra de estoque fica aqui.
+// Bloco 8 (RF-028 a RF-033), bloco 6 (RF-017, RF-018, RN03) e a entrada de compra do bloco 7 (RF-025). Toda regra de estoque fica aqui.
 @Service
 public class EstoqueService {
     private static final List<TipoMovimentacao> SOMAM = List.of(TipoMovimentacao.ENTRADA, TipoMovimentacao.ESTORNO);
@@ -165,6 +165,19 @@ public class EstoqueService {
             m.setObservacao("Estorno do pedido #" + p.getId() + " (cancelado)");
             movimentacoes.save(m);
         }
+    }
+
+    // RF-025: entrada automática quando um pedido de compra é recebido (motivo COMPRA, com o preço pago)
+    @Transactional
+    public void entradaCompra(Ingrediente ing, BigDecimal quantidade, BigDecimal custoUnitario, Long pedidoCompraId,
+                              String lote, LocalDate validade, Usuario quem, String observacao) {
+        EstoqueMovimentacao m = nova(ing, TipoMovimentacao.ENTRADA, MotivoMovimentacao.COMPRA, quantidade, quem);
+        m.setCustoUnitario(custoUnitario);
+        m.setPedidoCompraId(pedidoCompraId);
+        m.setLote(vazioParaNulo(lote));
+        m.setValidade(validade);
+        m.setObservacao(observacao);
+        movimentacoes.save(m);
     }
 
     private record Necessidade(Ingrediente ingrediente, BigDecimal quantidade) {}

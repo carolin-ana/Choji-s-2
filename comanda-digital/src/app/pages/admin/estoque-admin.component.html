@@ -42,6 +42,9 @@
                   <button type="button" class="btn-sec" (click)="abrir(s, 'ENTRADA')">+ Entrada</button>
                   <button type="button" class="btn-sec perigo" (click)="abrir(s, 'SAIDA')" [disabled]="s.saldo <= 0">− Saída</button>
                   <a class="btn-sec" routerLink="/admin/estoque/movimentacoes" [queryParams]="{ ingredienteId: s.ingredienteId }">Histórico</a>
+                  @if (s.abaixoMinimo && s.status === 'ATIVO') {
+                    <a class="btn-sec" routerLink="/admin/cotacao" [queryParams]="{ ingredienteId: s.ingredienteId }">Cotar</a>
+                  }
                 </div>
               </td>
             </tr>

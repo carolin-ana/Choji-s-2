@@ -25,6 +25,9 @@ import { ROTULOS_PERFIL } from '../../core/models';
               <span class="badge-alerta" [title]="estoque.alertas() + ' ingrediente(s) abaixo do mínimo'">{{ estoque.alertas() }}</span>
             }
           </a>
+          <a routerLink="/admin/fornecedores" routerLinkActive="ativo">Fornecedores</a>
+          <a routerLink="/admin/cotacao" routerLinkActive="ativo">Cotação</a>
+          <a routerLink="/admin/compras" routerLinkActive="ativo">Compras</a>
         }
         @if (ehAdmin()) { <a routerLink="/admin/usuarios" routerLinkActive="ativo">Usuários</a> }
       </nav>
